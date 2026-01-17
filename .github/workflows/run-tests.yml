@@ -21,7 +21,7 @@ jobs:
       fail-fast: true
       matrix:
         os: [ubuntu-latest]
-        php: [8.4, 8.5]
+        php: [8.4, 8.3]
         laravel: [12.*, 11.*]
         stability: [prefer-stable]
         include:
@@ -35,6 +35,15 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v6
+
+      - name: Setup ab-av1
+        if: runner.os == 'Linux'
+        run: |
+          wget -q https://github.com/alexheretic/ab-av1/releases/download/v0.7.18/ab-av1-v0.7.18-x86_64-unknown-linux-musl.tar.gz -O /tmp/ab-av1.tar.gz
+          tar -xzf /tmp/ab-av1.tar.gz -C /tmp
+          sudo mv /tmp/ab-av1 /usr/local/bin/ab-av1
+          sudo chmod +x /usr/local/bin/ab-av1
+          ab-av1 --version
 
       - name: Setup PHP
         uses: shivammathur/setup-php@v2
