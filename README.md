@@ -32,7 +32,7 @@ $result = AV1::open('videos/input.mp4')
 
 ## Requirements
 
-- PHP 8.2 or higher
+- PHP 8.3 or higher
 - Laravel 11.x or higher
 - [ab-av1](https://github.com/alexheretic/ab-av1) binary installed on your system
 
