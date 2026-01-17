@@ -165,6 +165,6 @@ class Encoder
      */
     public function __call($method, $arguments)
     {
-        return $this->forwardDecoratedCallTo($this->builder(), $method, $arguments);
+        return $this->forwardCallTo($this->builder(), $method, $arguments);
     }
 }

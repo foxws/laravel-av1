@@ -367,10 +367,13 @@ class MediaOpener
     }
 
     /**
-     * Forward other calls to encoder builder
+     * Forward other calls to encoder and return $this if the result is the encoder,
+     * allowing for method chaining.
      */
     public function __call($method, $arguments)
     {
-        return $this->forwardDecoratedCallTo($this->encoder->builder(), $method, $arguments);
+        $result = $this->forwardCallTo($encoder = $this->getEncoder(), $method, $arguments);
+
+        return ($result === $encoder) ? $this : $result;
     }
 }

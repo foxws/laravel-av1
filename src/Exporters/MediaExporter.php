@@ -155,10 +155,13 @@ class MediaExporter
     }
 
     /**
-     * Forward calls to encoder
+     * Forwards the call to the encoder object and returns the result
+     * if it's something different than the encoder object itself.
      */
     public function __call($method, $arguments)
     {
-        return $this->forwardDecoratedCallTo($this->encoder, $method, $arguments);
+        $result = $this->forwardCallTo($encoder = $this->encoder, $method, $arguments);
+
+        return ($result === $encoder) ? $this : $result;
     }
 }

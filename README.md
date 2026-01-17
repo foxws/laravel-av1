@@ -27,7 +27,7 @@ $result = AV1::open('videos/input.mp4')
 - 📊 **VMAF & XPSNR** - Built-in quality metrics
 - 🔄 **Multiple Commands** - Support for auto-encode, crf-search, sample-encode, encode, vmaf, and xpsnr
 - 🧪 **Testable** - Clean architecture with mockable components
-- 📝 **Type-Safe** - Full PHP 8.2+ type declarations
+- 📝 **Type-Safe** - Full PHP 8.3+ type declarations
 
 ## Requirements
 
