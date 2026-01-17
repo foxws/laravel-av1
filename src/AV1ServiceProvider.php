@@ -1,0 +1,48 @@
+<?php
+
+declare(strict_types=1);
+
+namespace Foxws\AV1;
+
+use Foxws\AV1\Filesystem\TemporaryDirectories;
+use Foxws\AV1\Support\AbAV1Encoder;
+use Foxws\AV1\Support\Encoder;
+use Spatie\LaravelPackageTools\Package;
+use Spatie\LaravelPackageTools\PackageServiceProvider;
+
+class AV1ServiceProvider extends PackageServiceProvider
+{
+    public function configurePackage(Package $package): void
+    {
+        $package
+            ->name('laravel-av1')
+            ->hasConfigFile('av1');
+    }
+
+    public function packageRegistered(): void
+    {
+        $this->app->singleton(TemporaryDirectories::class, function () {
+            return new TemporaryDirectories(
+                config('av1.temporary_files_root', sys_get_temp_dir()),
+            );
+        });
+
+        $this->app->bind(AbAV1Encoder::class, function ($app) {
+            return AbAV1Encoder::create(
+                $app->make('log'),
+                config('av1')
+            );
+        });
+
+        $this->app->bind(Encoder::class, function ($app) {
+            return Encoder::create(
+                $app->make('log'),
+                config('av1')
+            );
+        });
+
+        $this->app->bind(MediaOpener::class, function ($app) {
+            return new MediaOpener;
+        });
+    }
+}
