@@ -8,3 +8,6 @@ parameters:
         - config
     tmpDir: build/phpstan
     checkOctaneCompatibility: true
+    ignoreErrors:
+        - "#Called 'env' outside of the config directory#"
+        - '#Call to an undefined method Illuminate\\Process\\Factory::timeout\(\)#'

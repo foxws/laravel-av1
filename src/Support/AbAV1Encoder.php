@@ -74,9 +74,9 @@ class AbAV1Encoder
             ]);
         }
 
-        $process = app(ProcessFactory::class)
-            ->timeout($this->timeout)
-            ->run($command);
+        /** @var ProcessFactory $factory */
+        $factory = app(ProcessFactory::class);
+        $process = $factory->timeout($this->timeout)->run($command);
 
         $output = new ProcessOutput(
             $process->exitCode(),
@@ -106,9 +106,9 @@ class AbAV1Encoder
     public function isAvailable(): bool
     {
         try {
-            $process = app(ProcessFactory::class)
-                ->timeout(5)
-                ->run([$this->binaryPath, '--version']);
+            /** @var ProcessFactory $factory */
+            $factory = app(ProcessFactory::class);
+            $process = $factory->timeout(5)->run([$this->binaryPath, '--version']);
 
             return $process->exitCode() === 0;
         } catch (\Exception $e) {
