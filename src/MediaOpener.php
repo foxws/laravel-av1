@@ -8,6 +8,7 @@ use Foxws\AV1\Filesystem\Disk;
 use Foxws\AV1\Filesystem\Media;
 use Foxws\AV1\Filesystem\MediaCollection;
 use Foxws\AV1\Filesystem\TemporaryDirectories;
+use Foxws\AV1\Support\AbAV1Encoder;
 use Foxws\AV1\Support\Encoder;
 use Illuminate\Contracts\Filesystem\Filesystem;
 use Illuminate\Filesystem\FilesystemManager;
@@ -120,6 +121,17 @@ class MediaOpener
     }
 
     /**
+     * Switch to AbAV1 encoder
+     */
+    public function abav1(): self
+    {
+        $abav1Encoder = app(AbAV1Encoder::class);
+        $this->encoder->setEncoder($abav1Encoder);
+
+        return $this;
+    }
+
+    /**
      * Returns an instance of MediaExporter with the encoder.
      */
     public function export(): Exporters\MediaExporter
@@ -141,7 +153,7 @@ class MediaOpener
     /**
      * Set command to auto-encode
      */
-    public function autoEncode(): self
+    public function vmafEncode(): self
     {
         $this->encoder->builder()->command('auto-encode');
 
@@ -272,16 +284,6 @@ class MediaOpener
     public function crf(int $crf): self
     {
         $this->encoder->builder()->crf($crf);
-
-        return $this;
-    }
-
-    /**
-     * Set encoder (default: svt-av1)
-     */
-    public function withEncoder(string $encoder): self
-    {
-        $this->encoder->builder()->encoder($encoder);
 
         return $this;
     }

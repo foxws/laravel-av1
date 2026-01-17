@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Foxws\AV1\Support;
 
+use Foxws\AV1\Contracts\EncoderInterface;
 use Foxws\AV1\Filesystem\MediaCollection;
 use Foxws\AV1\Filesystem\TemporaryDirectories;
 use Illuminate\Support\Traits\ForwardsCalls;
@@ -13,7 +14,7 @@ class Encoder
 {
     use ForwardsCalls;
 
-    protected AbAV1Encoder $encoder;
+    protected EncoderInterface $encoder;
 
     protected ?MediaCollection $mediaCollection = null;
 
@@ -24,7 +25,7 @@ class Encoder
     protected ?string $temporaryDirectory = null;
 
     public function __construct(
-        AbAV1Encoder $encoder,
+        EncoderInterface $encoder,
         ?LoggerInterface $logger = null
     ) {
         $this->encoder = $encoder;
@@ -45,12 +46,12 @@ class Encoder
         return new self($this->encoder, $this->logger);
     }
 
-    public function getEncoder(): AbAV1Encoder
+    public function getEncoder(): EncoderInterface
     {
         return $this->encoder;
     }
 
-    public function setEncoder(AbAV1Encoder $encoder): self
+    public function setEncoder(EncoderInterface $encoder): self
     {
         $this->encoder = $encoder;
 

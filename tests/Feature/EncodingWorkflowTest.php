@@ -17,7 +17,7 @@ it('can create media opener instance', function () {
 });
 
 it('can set auto-encode command', function () {
-    $opener = AV1::autoEncode();
+    $opener = AV1::vmafEncode();
 
     expect($opener->getEncoder()->builder()->getCommand())->toBe('auto-encode');
 });
@@ -53,7 +53,7 @@ it('can set xpsnr command', function () {
 });
 
 it('can chain preset and minVmaf options', function () {
-    $opener = AV1::autoEncode()
+    $opener = AV1::vmafEncode()
         ->preset('6')
         ->minVmaf(95);
 
@@ -105,12 +105,11 @@ it('can set reference file for vmaf', function () {
 });
 
 it('can chain multiple options', function () {
-    $opener = AV1::autoEncode()
+    $opener = AV1::vmafEncode()
         ->preset('6')
         ->minVmaf(95)
         ->minCrf(20)
         ->maxCrf(40)
-        ->withEncoder('rav1e')
         ->verbose()
         ->fullVmaf();
 
@@ -120,7 +119,6 @@ it('can chain multiple options', function () {
     expect($options)->toHaveKey('min-vmaf');
     expect($options)->toHaveKey('min-crf');
     expect($options)->toHaveKey('max-crf');
-    expect($options)->toHaveKey('encoder');
     expect($options)->toHaveKey('verbose');
     expect($options)->toHaveKey('full-vmaf');
 });
@@ -186,7 +184,7 @@ it('can add pixel format option', function () {
 });
 
 it('can add max encoded percent option', function () {
-    $opener = AV1::autoEncode()
+    $opener = AV1::vmafEncode()
         ->preset('6')
         ->minVmaf(95)
         ->maxEncodedPercent(90);

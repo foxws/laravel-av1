@@ -4,11 +4,13 @@ declare(strict_types=1);
 
 namespace Foxws\AV1\Support;
 
+use Foxws\AV1\Contracts\EncoderInterface;
 use Illuminate\Process\Factory as ProcessFactory;
+use Illuminate\Process\ProcessResult;
 use Illuminate\Support\Facades\Config;
 use Psr\Log\LoggerInterface;
 
-class AbAV1Encoder
+class AbAV1Encoder implements EncoderInterface
 {
     protected string $binaryPath;
 
@@ -59,7 +61,7 @@ class AbAV1Encoder
     /**
      * Execute ab-av1 command
      */
-    public function run(array $arguments): ProcessOutput
+    public function run(array $arguments): ProcessResult
     {
         // Remove 'ab-av1' from arguments if present
         if (isset($arguments[0]) && $arguments[0] === 'ab-av1') {
@@ -78,26 +80,20 @@ class AbAV1Encoder
         $factory = app(ProcessFactory::class);
         $process = $factory->timeout($this->timeout)->run($command);
 
-        $output = new ProcessOutput(
-            $process->exitCode(),
-            $process->output(),
-            $process->errorOutput()
-        );
-
         if ($this->logger) {
-            if ($output->isSuccessful()) {
+            if ($process->successful()) {
                 $this->logger->info('ab-av1 command completed successfully', [
-                    'exitCode' => $output->exitCode,
+                    'exitCode' => $process->exitCode(),
                 ]);
             } else {
                 $this->logger->error('ab-av1 command failed', [
-                    'exitCode' => $output->exitCode,
-                    'error' => $output->errorOutput,
+                    'exitCode' => $process->exitCode(),
+                    'error' => $process->errorOutput(),
                 ]);
             }
         }
 
-        return $output;
+        return $process;
     }
 
     /**
@@ -119,7 +115,7 @@ class AbAV1Encoder
     /**
      * Get ab-av1 version
      */
-    public function getVersion(): string
+    public function version(): string
     {
         /** @var ProcessFactory $factory */
         $factory = app(ProcessFactory::class);
@@ -137,5 +133,13 @@ class AbAV1Encoder
         }
 
         return $output;
+    }
+
+    /**
+     * Alias for version() for backward compatibility
+     */
+    public function getVersion(): string
+    {
+        return $this->version();
     }
 }

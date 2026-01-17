@@ -24,7 +24,7 @@ it('facade resolves to media opener instance', function () {
 });
 
 it('can use facade for all command types', function () {
-    expect(AV1::autoEncode())->toBeInstanceOf(MediaOpener::class);
+    expect(AV1::vmafEncode())->toBeInstanceOf(MediaOpener::class);
     expect(AV1::crfSearch())->toBeInstanceOf(MediaOpener::class);
     expect(AV1::sampleEncode())->toBeInstanceOf(MediaOpener::class);
     expect(AV1::encode())->toBeInstanceOf(MediaOpener::class);
@@ -97,14 +97,14 @@ it('can export from facade chain', function () {
 
 it('facade works with all ab-av1 commands', function () {
     // Resolve fresh instances for each command to avoid shared state
-    $autoEncode = app(MediaOpener::class)->autoEncode();
+    $vmafEncode = app(MediaOpener::class)->vmafEncode();
     $crfSearch = app(MediaOpener::class)->crfSearch();
     $sampleEncode = app(MediaOpener::class)->sampleEncode();
     $encode = app(MediaOpener::class)->encode();
     $vmaf = app(MediaOpener::class)->vmaf();
     $xpsnr = app(MediaOpener::class)->xpsnr();
 
-    expect($autoEncode->getEncoder()->builder()->getCommand())->toBe('auto-encode');
+    expect($vmafEncode->getEncoder()->builder()->getCommand())->toBe('auto-encode');
     expect($crfSearch->getEncoder()->builder()->getCommand())->toBe('crf-search');
     expect($sampleEncode->getEncoder()->builder()->getCommand())->toBe('sample-encode');
     expect($encode->getEncoder()->builder()->getCommand())->toBe('encode');

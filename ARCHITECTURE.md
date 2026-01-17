@@ -47,7 +47,7 @@ The main entry point that provides the fluent API. Handles:
 **Usage:**
 
 ```php
-AV1::open('input.mp4')->autoEncode()->preset('6')->minVmaf(95)->export()->save('output.mp4');
+AV1::open('input.mp4')->vmafEncode()->preset('6')->minVmaf(95)->export()->save('output.mp4');
 ```
 
 ### 2. CommandBuilder
@@ -98,7 +98,7 @@ Handles exporting encoded files:
 
 ```php
 AV1::open('input.mp4')
-    ->autoEncode()
+    ->vmafEncode()
     ->preset('6')
     ->minVmaf(95)
     ->export()
@@ -196,7 +196,7 @@ Works seamlessly with Laravel's filesystem:
 // From S3 to S3
 AV1::fromDisk('s3')
     ->open('videos/input.mp4')
-    ->autoEncode()
+    ->vmafEncode()
     ->preset('6')
     ->minVmaf(95)
     ->export()
@@ -236,7 +236,7 @@ return [
 All methods return `$this` to enable method chaining:
 
 ```php
-AV1::open('input.mp4')->autoEncode()->preset('6')->minVmaf(95)->export()->save();
+AV1::open('input.mp4')->vmafEncode()->preset('6')->minVmaf(95)->export()->save();
 ```
 
 ### 2. Facade Pattern
@@ -264,7 +264,7 @@ All components use Laravel's service container for dependency injection.
 ```php
 try {
     $result = AV1::open('input.mp4')
-        ->autoEncode()
+        ->vmafEncode()
         ->preset('6')
         ->minVmaf(95)
         ->export()
@@ -304,7 +304,7 @@ public function customOption(mixed $value): self
 
 ```php
 AV1::open('input.mp4')
-    ->autoEncode()
+    ->vmafEncode()
     ->preset('6')
     ->minVmaf(95)
     ->export()

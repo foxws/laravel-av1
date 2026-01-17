@@ -184,28 +184,3 @@ it('handles multiple option overrides', function () {
     expect(in_array('--crf', $array))->toBeTrue();
     expect(in_array('--preset', $array))->toBeTrue();
 });
-
-it('can encode with rav1e encoder', function () {
-    $opener = AV1::encode()
-        ->input(fixture('video.mp4'))
-        ->output('output.mp4')
-        ->withEncoder('rav1e')
-        ->crf(30);
-
-    $options = $opener->getEncoder()->builder()->getOptions();
-
-    expect($options)->toHaveKey('encoder');
-    expect($options['encoder'])->toBe('rav1e');
-});
-
-it('can encode with vpx encoder', function () {
-    $opener = AV1::encode()
-        ->input(fixture('video.mp4'))
-        ->output('output.mp4')
-        ->withEncoder('vpx')
-        ->crf(30);
-
-    $options = $opener->getEncoder()->builder()->getOptions();
-
-    expect($options['encoder'])->toBe('vpx');
-});

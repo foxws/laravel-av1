@@ -63,19 +63,6 @@ it('can create media opener with configured defaults', function () {
     expect($opener)->not->toBeNull();
 });
 
-it('can override configured encoder', function () {
-    Config::set('av1.encoder', 'svt-av1');
-
-    $opener = AV1::encode()
-        ->input('input.mp4')
-        ->output('output.mp4')
-        ->withEncoder('rav1e');
-
-    $options = $opener->getEncoder()->builder()->getOptions();
-
-    expect($options['encoder'])->toBe('rav1e');
-});
-
 it('can override configured preset', function () {
     Config::set('av1.preset', '4');
 
@@ -92,7 +79,7 @@ it('can override configured preset', function () {
 it('can override configured min-vmaf', function () {
     Config::set('av1.min_vmaf', 90);
 
-    $opener = AV1::autoEncode()
+    $opener = AV1::vmafEncode()
         ->minVmaf(95);
 
     $options = $opener->getEncoder()->builder()->getOptions();
