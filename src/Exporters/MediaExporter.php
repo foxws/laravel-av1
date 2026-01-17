@@ -156,7 +156,7 @@ class MediaExporter
             $contents = File::get($outputPath);
 
             if ($this->visibility) {
-                $disk->put($destinationPath, $contents, $this->visibility);
+                $disk->put($destinationPath, $contents, ['visibility' => $this->visibility]);
             } else {
                 $disk->put($destinationPath, $contents);
             }
