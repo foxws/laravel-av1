@@ -2,12 +2,11 @@
 
 declare(strict_types=1);
 
-use Foxws\AV1\Support\CommandBuilder;
-use Foxws\AV1\Support\Encoder;
-use Foxws\AV1\Support\AbAV1Encoder;
+use Foxws\AV1\Filesystem\Disk;
 use Foxws\AV1\Filesystem\Media;
 use Foxws\AV1\Filesystem\MediaCollection;
-use Foxws\AV1\Filesystem\Disk;
+use Foxws\AV1\Support\CommandBuilder;
+use Foxws\AV1\Support\Encoder;
 
 // CommandBuilder Tests
 it('can build auto-encode command', function () {
@@ -216,7 +215,7 @@ it('can create encoder instance', function () {
 
 it('validates empty media collection on open', function () {
     $encoder = app(Encoder::class);
-    $emptyCollection = new MediaCollection();
+    $emptyCollection = new MediaCollection;
 
     $encoder->open($emptyCollection);
 })->throws(InvalidArgumentException::class, 'MediaCollection cannot be empty');
@@ -247,7 +246,7 @@ it('can create media instance', function () {
 });
 
 it('can create media collection', function () {
-    $collection = new MediaCollection();
+    $collection = new MediaCollection;
 
     expect($collection)->toBeInstanceOf(MediaCollection::class);
     expect($collection->count())->toBe(0);
@@ -256,7 +255,7 @@ it('can create media collection', function () {
 it('can add media to collection', function () {
     $disk = new Disk(Storage::disk('local'), 'local');
     $media = Media::make($disk, 'test.mp4');
-    $collection = new MediaCollection();
+    $collection = new MediaCollection;
 
     $collection->push($media);
 
@@ -268,7 +267,7 @@ it('can find media in collection by path', function () {
     $disk = new Disk(Storage::disk('local'), 'local');
     $media1 = Media::make($disk, 'video1.mp4');
     $media2 = Media::make($disk, 'video2.mp4');
-    $collection = new MediaCollection();
+    $collection = new MediaCollection;
 
     $collection->push($media1);
     $collection->push($media2);
@@ -281,7 +280,7 @@ it('can find media in collection by path', function () {
 it('returns null when media not found in collection', function () {
     $disk = new Disk(Storage::disk('local'), 'local');
     $media = Media::make($disk, 'video1.mp4');
-    $collection = new MediaCollection();
+    $collection = new MediaCollection;
 
     $collection->push($media);
 
