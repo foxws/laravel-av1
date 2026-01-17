@@ -59,6 +59,7 @@ it('can get command for export', function () {
         ->input(fixture('video.mp4'))
         ->output('output.mp4')
         ->crf(30)
+        ->preset('6')
         ->export()
         ->getCommand();
 

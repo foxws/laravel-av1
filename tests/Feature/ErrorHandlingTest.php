@@ -149,8 +149,8 @@ it('can reset builder for reuse', function () {
         ->output('output.mp4')
         ->crf(30);
 
-    // Reset to fresh state
-    $builder2 = $builder::fresh('encode');
+    // Create fresh instance
+    $builder2 = CommandBuilder::make('encode');
 
     expect($builder2->getInput())->toBeNull();
     expect($builder2->getOutput())->toBeNull();

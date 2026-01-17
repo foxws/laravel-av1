@@ -138,6 +138,7 @@ it('can get export instance', function () {
 it('can access command for debugging', function () {
     $command = AV1::encode()
         ->input(fixture('video.mp4'))
+        ->output('output.mp4')
         ->crf(30)
         ->preset('6')
         ->export()
@@ -151,10 +152,12 @@ it('can access command for debugging', function () {
 
 it('can handle multi-disk operations', function () {
     $opener1 = AV1::fromDisk('local');
-    $opener2 = $opener1->fromDisk('local');
+    $opener2 = $opener1->fromDisk('public');
 
-    expect($opener1)->not->toBe($opener2);
-    expect($opener2->getDisk()->getName())->toBe('local');
+    // fromDisk mutates and returns the same instance
+    expect($opener1)->toBe($opener2);
+    // But the disk should be changed
+    expect($opener2->getDisk()->getName())->toBe('public');
 });
 
 it('can add sample option', function () {

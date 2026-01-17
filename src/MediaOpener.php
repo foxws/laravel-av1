@@ -34,7 +34,7 @@ class MediaOpener
     ) {
         $this->fromDisk($disk ?: Config::string('filesystems.default'));
 
-        $this->encoder = $encoder ?: app(Encoder::class)->fresh();
+        $this->encoder = $encoder ?: app(Encoder::class);
 
         $this->collection = $mediaCollection ?: new MediaCollection;
     }

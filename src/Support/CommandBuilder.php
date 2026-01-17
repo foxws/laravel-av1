@@ -23,11 +23,16 @@ class CommandBuilder
 
     protected ?string $distorted = null;
 
-    public function __construct() {}
-
-    public static function make(): self
+    public function __construct(?string $command = null)
     {
-        return new self;
+        if ($command) {
+            $this->command($command);
+        }
+    }
+
+    public static function make(?string $command = null): self
+    {
+        return new self($command);
     }
 
     /**
@@ -258,9 +263,28 @@ class CommandBuilder
         // Add command-specific required arguments
         switch ($this->command) {
             case 'auto-encode':
+                if (! $this->input) {
+                    throw new InvalidArgumentException('Input file is required');
+                }
+                if (! $this->output) {
+                    throw new InvalidArgumentException('Output file is required');
+                }
+                if (! isset($this->options['preset'])) {
+                    throw new InvalidArgumentException('Preset required');
+                }
+                if (! isset($this->options['min-vmaf'])) {
+                    throw new InvalidArgumentException('Min VMAF required');
+                }
+                $arguments[] = '-i';
+                $arguments[] = $this->input;
+                break;
+
             case 'crf-search':
                 if (! $this->input) {
-                    throw new InvalidArgumentException('Input file required');
+                    throw new InvalidArgumentException('Input file is required');
+                }
+                if (! $this->output) {
+                    throw new InvalidArgumentException('Output file is required');
                 }
                 if (! isset($this->options['preset'])) {
                     throw new InvalidArgumentException('Preset required');
@@ -273,9 +297,28 @@ class CommandBuilder
                 break;
 
             case 'sample-encode':
+                if (! $this->input) {
+                    throw new InvalidArgumentException('Input file is required');
+                }
+                if (! $this->output) {
+                    throw new InvalidArgumentException('Output file is required');
+                }
+                if (! isset($this->options['crf'])) {
+                    throw new InvalidArgumentException('CRF required');
+                }
+                if (! isset($this->options['preset'])) {
+                    throw new InvalidArgumentException('Preset required');
+                }
+                $arguments[] = '-i';
+                $arguments[] = $this->input;
+                break;
+
             case 'encode':
                 if (! $this->input) {
-                    throw new InvalidArgumentException('Input file required');
+                    throw new InvalidArgumentException('Input file is required');
+                }
+                if (! $this->output) {
+                    throw new InvalidArgumentException('Output file is required');
                 }
                 if (! isset($this->options['crf'])) {
                     throw new InvalidArgumentException('CRF required');
@@ -288,12 +331,24 @@ class CommandBuilder
                 break;
 
             case 'vmaf':
-            case 'xpsnr':
                 if (! $this->reference) {
-                    throw new InvalidArgumentException('Reference file required');
+                    throw new InvalidArgumentException('Reference file is required');
                 }
                 if (! $this->distorted) {
-                    throw new InvalidArgumentException('Distorted file required');
+                    throw new InvalidArgumentException('Distorted file is required');
+                }
+                $arguments[] = '--reference';
+                $arguments[] = $this->reference;
+                $arguments[] = '--distorted';
+                $arguments[] = $this->distorted;
+                break;
+
+            case 'xpsnr':
+                if (! $this->reference) {
+                    throw new InvalidArgumentException('Reference file is required');
+                }
+                if (! $this->distorted) {
+                    throw new InvalidArgumentException('Distorted file is required');
                 }
                 $arguments[] = '--reference';
                 $arguments[] = $this->reference;
@@ -303,7 +358,7 @@ class CommandBuilder
         }
 
         // Add output for encode commands
-        if ($this->output && in_array($this->command, ['auto-encode', 'sample-encode', 'encode'])) {
+        if ($this->output && in_array($this->command, ['auto-encode', 'crf-search', 'sample-encode', 'encode'])) {
             $arguments[] = '-o';
             $arguments[] = $this->output;
         }

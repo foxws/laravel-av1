@@ -30,7 +30,7 @@ class MediaExporter
         $this->encoder = $encoder;
     }
 
-    protected function getDisk(): Disk
+    public function getDisk(): Disk
     {
         if ($this->toDisk) {
             return $this->toDisk;
@@ -63,6 +63,22 @@ class MediaExporter
         $this->visibility = $visibility;
 
         return $this;
+    }
+
+    /**
+     * Get the current visibility setting
+     */
+    public function getVisibility(): ?string
+    {
+        return $this->visibility;
+    }
+
+    /**
+     * Get the current target path
+     */
+    public function getPath(): ?string
+    {
+        return $this->toPath;
     }
 
     /**
