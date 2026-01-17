@@ -11,4 +11,3 @@ arch('classes in src/Support extend nothing or base classes')
     ->expect('Foxws\\AV1\\Support')
     ->classes()
     ->not->toExtend('Illuminate\\Support\\Facades\\Facade');
-
