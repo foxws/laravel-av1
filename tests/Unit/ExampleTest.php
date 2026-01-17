@@ -12,7 +12,7 @@ use Foxws\AV1\Support\Encoder;
 it('can build auto-encode command', function () {
     $builder = CommandBuilder::make()
         ->command('auto-encode')
-        ->input(fixture())
+        ->input(fixture('video.mp4'))
         ->preset('6')
         ->minVmaf(95);
 
@@ -31,7 +31,7 @@ it('can build auto-encode command', function () {
 it('can build crf-search command', function () {
     $builder = CommandBuilder::make()
         ->command('crf-search')
-        ->input(fixture())
+        ->input(fixture('video.mp4'))
         ->preset('6')
         ->minVmaf(95)
         ->minCrf(20)
@@ -49,7 +49,7 @@ it('can build crf-search command', function () {
 it('can build sample-encode command', function () {
     $builder = CommandBuilder::make()
         ->command('sample-encode')
-        ->input(fixture())
+        ->input(fixture('video.mp4'))
         ->crf(30)
         ->preset('6')
         ->sample(60)
@@ -69,7 +69,7 @@ it('can build sample-encode command', function () {
 it('can build encode command', function () {
     $builder = CommandBuilder::make()
         ->command('encode')
-        ->input(fixture())
+        ->input(fixture('video.mp4'))
         ->crf(30)
         ->preset('6')
         ->output('output.mp4');
@@ -112,7 +112,7 @@ it('can build xpsnr command', function () {
 it('throws when auto-encode missing required preset', function () {
     $builder = CommandBuilder::make()
         ->command('auto-encode')
-        ->input(fixture())
+        ->input(fixture('video.mp4'))
         ->minVmaf(95);
 
     $builder->buildArray();
@@ -121,7 +121,7 @@ it('throws when auto-encode missing required preset', function () {
 it('throws when crf-search missing required minVmaf', function () {
     $builder = CommandBuilder::make()
         ->command('crf-search')
-        ->input(fixture())
+        ->input(fixture('video.mp4'))
         ->preset('6');
 
     $builder->buildArray();
@@ -130,7 +130,7 @@ it('throws when crf-search missing required minVmaf', function () {
 it('throws when encode missing required crf', function () {
     $builder = CommandBuilder::make()
         ->command('encode')
-        ->input(fixture())
+        ->input(fixture('video.mp4'))
         ->preset('6');
 
     $builder->buildArray();
@@ -155,7 +155,7 @@ it('throws when vmaf missing distorted', function () {
 it('can reset command builder', function () {
     $builder = CommandBuilder::make()
         ->command('auto-encode')
-        ->input(fixture())
+        ->input(fixture('video.mp4'))
         ->preset('6')
         ->minVmaf(95)
         ->reset();

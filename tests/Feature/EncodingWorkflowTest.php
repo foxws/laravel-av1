@@ -78,17 +78,17 @@ it('can chain crf and preset options', function () {
 });
 
 it('can set input file', function () {
-    $opener = AV1::input(fixture())
+    $opener = AV1::input(fixture('video.mp4'))
         ->encode()
         ->crf(30)
         ->preset('6');
 
-    expect($opener->getEncoder()->builder()->getInput())->toBe(fixture());
+    expect($opener->getEncoder()->builder()->getInput())->toBe(fixture('video.mp4'));
 });
 
 it('can set output file', function () {
     $opener = AV1::encode()
-        ->input(fixture())
+        ->input(fixture('video.mp4'))
         ->output('output.mp4')
         ->crf(30)
         ->preset('6');
@@ -98,7 +98,7 @@ it('can set output file', function () {
 
 it('can set reference file for vmaf', function () {
     $opener = AV1::vmaf()
-        ->reference(fixture())
+        ->reference(fixture('video.mp4'))
         ->distorted('encoded.mp4');
 
     expect($opener->getEncoder()->builder()->getOptions())->not->toHaveKey('reference');
@@ -137,7 +137,7 @@ it('can get export instance', function () {
 
 it('can access command for debugging', function () {
     $command = AV1::encode()
-        ->input(fixture())
+        ->input(fixture('video.mp4'))
         ->crf(30)
         ->preset('6')
         ->export()
@@ -145,7 +145,7 @@ it('can access command for debugging', function () {
 
     expect($command)->toContain('ab-av1');
     expect($command)->toContain('encode');
-    expect($command)->toContain(fixture());
+    expect($command)->toContain(fixture('video.mp4'));
     expect($command)->toContain('30');
 });
 

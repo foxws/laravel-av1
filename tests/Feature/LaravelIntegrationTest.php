@@ -74,19 +74,19 @@ it('facade methods return fresh instances', function () {
 
 it('can chain facade methods with instance methods', function () {
     $result = AV1::encode()
-        ->input(fixture())
+        ->input(fixture('video.mp4'))
         ->output('output.mp4')
         ->crf(30)
         ->preset('6')
         ->verbose();
 
-    expect($result->getEncoder()->builder()->getInput())->toBe(fixture());
+    expect($result->getEncoder()->builder()->getInput())->toBe(fixture('video.mp4'));
     expect($result->getEncoder()->builder()->getOptions())->toHaveKey('verbose');
 });
 
 it('can export from facade chain', function () {
     $exporter = AV1::encode()
-        ->input(fixture())
+        ->input(fixture('video.mp4'))
         ->output('output.mp4')
         ->crf(30)
         ->export();

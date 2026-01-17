@@ -25,10 +25,3 @@ function skipIfNoAbAV1(): void
         test()->markTestSkipped('ab-av1 binary not available');
     }
 }
-/**
- * Get path to test fixture file
- */
-function fixture(string $filename = 'video.mp4'): string
-{
-    return __DIR__.'/fixtures/'.$filename;
-}
