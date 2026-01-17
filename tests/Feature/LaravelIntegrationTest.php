@@ -51,17 +51,17 @@ it('service provider is registered', function () {
 
 it('can instantiate multiple independent encoders', function () {
     $encoder1 = AV1::encode()
-        ->input('video1.mp4')
+        ->input(fixture('video.mp4'))
         ->output('encoded1.mp4')
         ->crf(30);
 
     $encoder2 = AV1::encode()
-        ->input('video2.mp4')
+        ->input(fixture('video.mp4'))
         ->output('encoded2.mp4')
         ->crf(35);
 
-    expect($encoder1->getEncoder()->builder()->getInput())->toBe('video1.mp4');
-    expect($encoder2->getEncoder()->builder()->getInput())->toBe('video2.mp4');
+    expect($encoder1->getEncoder()->builder()->getInput())->toBe(fixture('video.mp4'));
+    expect($encoder2->getEncoder()->builder()->getInput())->toBe(fixture('video.mp4'));
 });
 
 it('facade methods return fresh instances', function () {
@@ -74,19 +74,19 @@ it('facade methods return fresh instances', function () {
 
 it('can chain facade methods with instance methods', function () {
     $result = AV1::encode()
-        ->input('input.mp4')
+        ->input(fixture())
         ->output('output.mp4')
         ->crf(30)
         ->preset('6')
         ->verbose();
 
-    expect($result->getEncoder()->builder()->getInput())->toBe('input.mp4');
+    expect($result->getEncoder()->builder()->getInput())->toBe(fixture());
     expect($result->getEncoder()->builder()->getOptions())->toHaveKey('verbose');
 });
 
 it('can export from facade chain', function () {
     $exporter = AV1::encode()
-        ->input('input.mp4')
+        ->input(fixture())
         ->output('output.mp4')
         ->crf(30)
         ->export();

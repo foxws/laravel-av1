@@ -13,7 +13,7 @@ beforeEach(function () {
 
 it('can export to local disk', function () {
     $exporter = AV1::encode()
-        ->input('input.mp4')
+        ->input(fixture())
         ->output('output.mp4')
         ->crf(30)
         ->export();
@@ -23,7 +23,7 @@ it('can export to local disk', function () {
 
 it('can specify target disk for export', function () {
     $exporter = AV1::encode()
-        ->input('input.mp4')
+        ->input(fixture())
         ->output('output.mp4')
         ->crf(30)
         ->export()
@@ -34,7 +34,7 @@ it('can specify target disk for export', function () {
 
 it('can specify path for export', function () {
     $exporter = AV1::encode()
-        ->input('input.mp4')
+        ->input(fixture())
         ->output('output.mp4')
         ->crf(30)
         ->export()
@@ -45,7 +45,7 @@ it('can specify path for export', function () {
 
 it('can set file visibility for export', function () {
     $exporter = AV1::encode()
-        ->input('input.mp4')
+        ->input(fixture())
         ->output('output.mp4')
         ->crf(30)
         ->export()
@@ -56,7 +56,7 @@ it('can set file visibility for export', function () {
 
 it('can get command for export', function () {
     $command = AV1::encode()
-        ->input('input.mp4')
+        ->input(fixture())
         ->output('output.mp4')
         ->crf(30)
         ->export()
@@ -69,7 +69,7 @@ it('can get command for export', function () {
 
 it('can get builder from exporter', function () {
     $builder = AV1::encode()
-        ->input('input.mp4')
+        ->input(fixture())
         ->crf(30)
         ->export()
         ->getBuilder();
@@ -79,7 +79,7 @@ it('can get builder from exporter', function () {
 
 it('can get encoder from exporter', function () {
     $encoder = AV1::encode()
-        ->input('input.mp4')
+        ->input(fixture())
         ->crf(30)
         ->export()
         ->getEncoder();
@@ -89,7 +89,7 @@ it('can get encoder from exporter', function () {
 
 it('can chain path and disk methods', function () {
     $exporter = AV1::encode()
-        ->input('input.mp4')
+        ->input(fixture())
         ->output('output.mp4')
         ->crf(30)
         ->export()
@@ -102,13 +102,13 @@ it('can chain path and disk methods', function () {
 
 it('can handle multiple export destinations', function () {
     $exporter1 = AV1::encode()
-        ->input('input.mp4')
+        ->input(fixture())
         ->crf(30)
         ->export()
         ->toDisk('local');
 
     $exporter2 = AV1::encode()
-        ->input('input.mp4')
+        ->input(fixture())
         ->crf(30)
         ->export()
         ->toDisk('s3');

@@ -103,7 +103,7 @@ it('throws when xpsnr missing distorted file', function () {
 
 it('builds valid encode command array', function () {
     $builder = new CommandBuilder('encode');
-    $builder->input('input.mp4')
+    $builder->input(fixture())
         ->output('output.mp4')
         ->crf(30)
         ->preset('6');
@@ -112,13 +112,13 @@ it('builds valid encode command array', function () {
 
     expect($array)->toContain('ab-av1');
     expect($array)->toContain('encode');
-    expect($array)->toContain('input.mp4');
+    expect($array)->toContain(fixture());
     expect($array)->toContain('output.mp4');
 });
 
 it('builds valid auto-encode command array', function () {
     $builder = new CommandBuilder('auto-encode');
-    $builder->input('input.mp4')
+    $builder->input(fixture())
         ->output('output.mp4')
         ->preset('6')
         ->minVmaf(95);
@@ -131,7 +131,7 @@ it('builds valid auto-encode command array', function () {
 
 it('builds valid vmaf command array', function () {
     $builder = new CommandBuilder('vmaf');
-    $builder->reference('original.mp4')
+    $builder->reference(fixture())
         ->distorted('encoded.mp4')
         ->fullVmaf();
 
@@ -139,7 +139,7 @@ it('builds valid vmaf command array', function () {
 
     expect($array)->toContain('ab-av1');
     expect($array)->toContain('vmaf');
-    expect($array)->toContain('original.mp4');
+    expect($array)->toContain(fixture());
     expect($array)->toContain('encoded.mp4');
 });
 
@@ -187,7 +187,7 @@ it('handles multiple option overrides', function () {
 
 it('can encode with rav1e encoder', function () {
     $opener = AV1::encode()
-        ->input('input.mp4')
+        ->input(fixture())
         ->output('output.mp4')
         ->withEncoder('rav1e')
         ->crf(30);
@@ -200,7 +200,7 @@ it('can encode with rav1e encoder', function () {
 
 it('can encode with vpx encoder', function () {
     $opener = AV1::encode()
-        ->input('input.mp4')
+        ->input(fixture())
         ->output('output.mp4')
         ->withEncoder('vpx')
         ->crf(30);
