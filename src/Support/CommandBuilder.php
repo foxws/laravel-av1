@@ -23,9 +23,7 @@ class CommandBuilder
 
     protected ?string $distorted = null;
 
-    public function __construct()
-    {
-    }
+    public function __construct() {}
 
     public static function make(): self
     {

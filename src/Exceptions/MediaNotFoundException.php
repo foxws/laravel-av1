@@ -6,6 +6,4 @@ namespace Foxws\AV1\Exceptions;
 
 use Exception;
 
-class MediaNotFoundException extends Exception
-{
-}
+class MediaNotFoundException extends Exception {}

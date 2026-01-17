@@ -29,7 +29,7 @@ function autoEncodeExample()
         ->save('output.mp4');
 
     if ($result->isSuccessful()) {
-        echo "Encoded successfully!";
+        echo 'Encoded successfully!';
     }
 }
 
@@ -50,7 +50,7 @@ function crfSearchExample()
         ->save();
 
     // Output contains recommended CRF value
-    echo "Recommended CRF: " . $result->getOutput();
+    echo 'Recommended CRF: '.$result->getOutput();
 }
 
 /**
@@ -110,7 +110,7 @@ function xpsnrExample()
         ->export()
         ->save();
 
-    echo "XPSNR Score: " . $result->getOutput();
+    echo 'XPSNR Score: '.$result->getOutput();
 }
 
 // =============================================================================
@@ -221,7 +221,7 @@ function callbacksExample()
             ->minVmaf(95)
             ->export()
             ->afterSaving(function ($result, $path) {
-                Log::info("Encoding completed", [
+                Log::info('Encoding completed', [
                     'path' => $path,
                     'output' => $result->getOutput(),
                     'exit_code' => $result->getExitCode(),
@@ -232,10 +232,10 @@ function callbacksExample()
             ->save('output.mp4');
 
         if ($result->isSuccessful()) {
-            echo "Success!";
+            echo 'Success!';
         }
     } catch (\Exception $e) {
-        Log::error("Encoding failed: " . $e->getMessage());
+        Log::error('Encoding failed: '.$e->getMessage());
     }
 }
 
@@ -351,7 +351,7 @@ function completeWorkflowExample()
         ->export()
         ->save();
 
-    Log::info("Encoding complete", [
+    Log::info('Encoding complete', [
         'optimal_crf' => $optimalCrf,
         'vmaf_score' => $vmafResult->getOutput(),
     ]);

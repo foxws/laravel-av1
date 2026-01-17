@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Foxws\AV1\Filesystem;
 
 use Illuminate\Contracts\Filesystem\Filesystem;
-use Illuminate\Filesystem\FilesystemManager;
 use Illuminate\Support\Facades\Storage;
 
 class Disk

@@ -10,8 +10,7 @@ class ProcessOutput
         public readonly int $exitCode,
         public readonly string $output,
         public readonly string $errorOutput,
-    ) {
-    }
+    ) {}
 
     public function isSuccessful(): bool
     {

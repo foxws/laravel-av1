@@ -9,8 +9,7 @@ class EncoderResult
     public function __construct(
         protected ProcessOutput $processOutput,
         protected ?string $outputPath = null,
-    ) {
-    }
+    ) {}
 
     public function isSuccessful(): bool
     {
