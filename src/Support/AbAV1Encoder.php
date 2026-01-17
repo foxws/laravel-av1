@@ -21,9 +21,9 @@ class AbAV1Encoder
         ?LoggerInterface $logger = null,
         ?int $timeout = null
     ) {
-        $this->binaryPath = $binaryPath ?? Config::get('av1.binary_path', 'ab-av1');
+        $this->binaryPath = Config::string('av1.binaries.ab-av1', 'ab-av1');
         $this->logger = $logger;
-        $this->timeout = $timeout ?? Config::get('av1.timeout', 3600);
+        $this->timeout = $timeout ?? Config::integer('av1.ab-av1.timeout', 3600);
     }
 
     public static function create(

@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use Foxws\AV1\Tests\TestCase;
+use Illuminate\Support\Facades\Config;
 
 uses(TestCase::class)->in(__DIR__);
 
@@ -11,7 +12,7 @@ uses(TestCase::class)->in(__DIR__);
  */
 function hasAbAV1(): bool
 {
-    $binary = config('av1.binary_path', 'ab-av1');
+    $binary = Config::string('av1.binaries.ab-av1', 'ab-av1');
 
     return is_executable($binary) || (is_executable(trim(shell_exec('which ab-av1') ?? '')));
 }

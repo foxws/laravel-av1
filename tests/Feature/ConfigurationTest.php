@@ -13,40 +13,32 @@ it('can access configuration values', function () {
 });
 
 it('respects configured binary path', function () {
-    Config::set('av1.binary_path', '/usr/local/bin/ab-av1');
+    Config::set('av1.binaries.ab-av1', '/usr/local/bin/ab-av1');
 
-    $path = config('av1.binary_path');
+    $path = config('av1.binaries.ab-av1');
 
     expect($path)->toBe('/usr/local/bin/ab-av1');
 });
 
-it('respects configured default encoder', function () {
-    Config::set('av1.encoder', 'rav1e');
-
-    $encoder = config('av1.encoder');
-
-    expect($encoder)->toBe('rav1e');
-});
-
 it('respects configured default preset', function () {
-    Config::set('av1.preset', '6');
+    Config::set('av1.ab-av1.preset', '6');
 
-    $preset = config('av1.preset');
+    $preset = config('av1.ab-av1.preset');
 
     expect($preset)->toBe('6');
 });
 
 it('respects configured timeout value', function () {
-    Config::set('av1.timeout', 7200);
+    Config::set('av1.ab-av1.timeout', 7200);
 
-    $timeout = config('av1.timeout');
+    $timeout = config('av1.ab-av1.timeout');
 
     expect($timeout)->toBe(7200);
 });
 
 it('uses environment variable for binary path', function () {
     // Environment variable AB_AV1_BINARY_PATH should override config
-    $path = config('av1.binary_path');
+    $path = config('av1.binaries.ab-av1');
 
     expect($path)->toBeString();
 });
@@ -54,12 +46,15 @@ it('uses environment variable for binary path', function () {
 it('has default configuration values', function () {
     $config = config('av1');
 
-    expect($config)->toHaveKey('binary_path');
-    expect($config)->toHaveKey('timeout');
-    expect($config)->toHaveKey('encoder');
-    expect($config)->toHaveKey('preset');
-    expect($config)->toHaveKey('min_vmaf');
+    expect($config)->toHaveKey('binaries');
+    expect($config)->toHaveKey('ab-av1');
     expect($config)->toHaveKey('temporary_files_root');
+
+    expect($config['binaries'])->toHaveKey('ab-av1');
+    expect($config['binaries'])->toHaveKey('ffmpeg');
+    expect($config['ab-av1'])->toHaveKey('timeout');
+    expect($config['ab-av1'])->toHaveKey('preset');
+    expect($config['ab-av1'])->toHaveKey('min_vmaf');
 });
 
 it('can create media opener with configured defaults', function () {
