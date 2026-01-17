@@ -115,4 +115,27 @@ class AbAV1Encoder
             return false;
         }
     }
+
+    /**
+     * Get ab-av1 version
+     */
+    public function getVersion(): string
+    {
+        /** @var ProcessFactory $factory */
+        $factory = app(ProcessFactory::class);
+        $process = $factory->timeout(5)->run([$this->binaryPath, '--version']);
+
+        if ($process->exitCode() !== 0) {
+            throw new \RuntimeException('Failed to get ab-av1 version: '.$process->errorOutput());
+        }
+
+        // Extract version from output (e.g., "ab-av1 0.7.0")
+        $output = trim($process->output());
+
+        if (preg_match('/ab-av1 ([\d.]+)/', $output, $matches)) {
+            return $matches[1];
+        }
+
+        return $output;
+    }
 }

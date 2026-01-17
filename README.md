@@ -59,6 +59,29 @@ cargo install ab-av1
 
 Or download a prebuilt binary from the [releases page](https://github.com/alexheretic/ab-av1/releases).
 
+### Verify Installation
+
+After installation, verify that ab-av1 is properly configured:
+
+```bash
+php artisan av1:verify
+```
+
+This will check:
+
+- Binary exists and is executable
+- Can retrieve version information
+- Configuration is properly set up
+- Temporary directory is accessible
+
+### Package Information
+
+View package and binary information:
+
+```bash
+php artisan av1:info
+```
+
 ## Quick Start
 
 ### Auto Encode
@@ -367,13 +390,16 @@ try {
 ## Available Commands
 
 ### auto-encode
+
 Automatically encode video targeting a specific VMAF score.
 
 **Required options:**
+
 - `preset(string)` - Encoder preset
 - `minVmaf(float)` - Minimum VMAF score
 
 **Optional:**
+
 - `withEncoder(string)` - Encoder to use (svt-av1, rav1e, aom)
 - `maxEncodedPercent(int)` - Max size as percentage of input
 - `sample(int)` - Sample duration in seconds
@@ -381,45 +407,57 @@ Automatically encode video targeting a specific VMAF score.
 - `maxCrf(int)` - Maximum CRF to try
 
 ### crf-search
+
 Search for optimal CRF without encoding full video.
 
 **Required options:**
+
 - `preset(string)` - Encoder preset
 - `minVmaf(float)` - Minimum VMAF score
 
 **Optional:** Same as auto-encode
 
 ### sample-encode
+
 Encode a sample of the video.
 
 **Required options:**
+
 - `crf(int)` - CRF value
 - `preset(string)` - Encoder preset
 
 **Optional:**
+
 - `sample(int)` - Sample duration in seconds
 
 ### encode
+
 Encode the entire video.
 
 **Required options:**
+
 - `crf(int)` - CRF value
 - `preset(string)` - Encoder preset
 
 ### vmaf
+
 Calculate VMAF score between two videos.
 
 **Required options:**
+
 - `reference(string)` - Reference video path
 - `distorted(string)` - Distorted video path
 
 **Optional:**
+
 - `vmafModel(string)` - Path to VMAF model
 
 ### xpsnr
+
 Calculate XPSNR score between two videos.
 
 **Required options:**
+
 - `reference(string)` - Reference video path
 - `distorted(string)` - Distorted video path
 
