@@ -15,8 +15,8 @@ return [
     |
     */
     'binaries' => [
-        'ab-av1' => env('AB_AV1_BINARY_PATH', 'ab-av1'),
-        'ffmpeg' => env('FFMPEG_BINARY_PATH', 'ffmpeg'),
+        'ab-av1' => env('AB_AV1_BINARY_PATH', '/usr/local/bin/ab-av1'),
+        'ffmpeg' => env('FFMPEG_BINARY_PATH', '/usr/local/bin/ffmpeg'),
     ],
 
     /*
