@@ -39,8 +39,8 @@ jobs:
       - name: Setup ab-av1
         if: runner.os == 'Linux'
         run: |
-          wget -q https://github.com/alexheretic/ab-av1/releases/download/v0.7.18/ab-av1-v0.7.18-x86_64-unknown-linux-musl.tar.gz -O /tmp/ab-av1.tar.gz
-          tar -xzf /tmp/ab-av1.tar.gz -C /tmp
+          wget -q https://github.com/alexheretic/ab-av1/releases/download/v0.10.3/ab-av1-v0.10.3-x86_64-unknown-linux-musl.tar.zst -O /tmp/ab-av1.tar.zst
+          tar -xf /tmp/ab-av1.tar.zst -C /tmp
           sudo mv /tmp/ab-av1 /usr/local/bin/ab-av1
           sudo chmod +x /usr/local/bin/ab-av1
           ab-av1 --version

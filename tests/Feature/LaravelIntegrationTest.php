@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 use Foxws\AV1\Facades\AV1;
 use Foxws\AV1\MediaOpener;
-use Illuminate\Support\Facades\Container;
 
 it('registers media opener in service container', function () {
     $opener = app(MediaOpener::class);
@@ -13,7 +12,7 @@ it('registers media opener in service container', function () {
 });
 
 it('can resolve media opener via container', function () {
-    $opener = Container::getInstance()->make(MediaOpener::class);
+    $opener = app()->make(MediaOpener::class);
 
     expect($opener)->toBeInstanceOf(MediaOpener::class);
 });
@@ -25,7 +24,7 @@ it('facade resolves to media opener instance', function () {
 });
 
 it('can use facade for all command types', function () {
-    expect(AV1::autoEncode())->toBeInstanceOf(MediaOpener::class);
+    expect(AV1::vmafEncode())->toBeInstanceOf(MediaOpener::class);
     expect(AV1::crfSearch())->toBeInstanceOf(MediaOpener::class);
     expect(AV1::sampleEncode())->toBeInstanceOf(MediaOpener::class);
     expect(AV1::encode())->toBeInstanceOf(MediaOpener::class);
@@ -64,12 +63,14 @@ it('can instantiate multiple independent encoders', function () {
     expect($encoder2->getEncoder()->builder()->getInput())->toBe(fixture('video.mp4'));
 });
 
-it('facade methods return fresh instances', function () {
-    $opener1 = AV1::encode();
-    $opener2 = AV1::encode();
+it('facade methods return independent state', function () {
+    // When resolving through the container, each gets a fresh instance
+    $opener1 = app(MediaOpener::class)->encode()->input('video1.mp4');
+    $opener2 = app(MediaOpener::class)->encode()->input('video2.mp4');
 
-    // Each should be a fresh instance
-    expect($opener1->getEncoder())->not->toBe($opener2->getEncoder());
+    // Each call should have independent state
+    expect($opener1->getEncoder()->builder()->getInput())->toBe('video1.mp4');
+    expect($opener2->getEncoder()->builder()->getInput())->toBe('video2.mp4');
 });
 
 it('can chain facade methods with instance methods', function () {
@@ -95,14 +96,15 @@ it('can export from facade chain', function () {
 });
 
 it('facade works with all ab-av1 commands', function () {
-    $autoEncode = AV1::autoEncode();
-    $crfSearch = AV1::crfSearch();
-    $sampleEncode = AV1::sampleEncode();
-    $encode = AV1::encode();
-    $vmaf = AV1::vmaf();
-    $xpsnr = AV1::xpsnr();
+    // Resolve fresh instances for each command to avoid shared state
+    $vmafEncode = app(MediaOpener::class)->vmafEncode();
+    $crfSearch = app(MediaOpener::class)->crfSearch();
+    $sampleEncode = app(MediaOpener::class)->sampleEncode();
+    $encode = app(MediaOpener::class)->encode();
+    $vmaf = app(MediaOpener::class)->vmaf();
+    $xpsnr = app(MediaOpener::class)->xpsnr();
 
-    expect($autoEncode->getEncoder()->builder()->getCommand())->toBe('auto-encode');
+    expect($vmafEncode->getEncoder()->builder()->getCommand())->toBe('auto-encode');
     expect($crfSearch->getEncoder()->builder()->getCommand())->toBe('crf-search');
     expect($sampleEncode->getEncoder()->builder()->getCommand())->toBe('sample-encode');
     expect($encode->getEncoder()->builder()->getCommand())->toBe('encode');

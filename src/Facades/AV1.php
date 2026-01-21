@@ -9,7 +9,7 @@ use Illuminate\Support\Facades\Facade;
 /**
  * @method static \Foxws\AV1\MediaOpener open($paths)
  * @method static \Foxws\AV1\MediaOpener fromDisk(\Foxws\AV1\Filesystem\Disk|\Illuminate\Contracts\Filesystem\Filesystem|string $disk)
- * @method static \Foxws\AV1\MediaOpener autoEncode()
+ * @method static \Foxws\AV1\MediaOpener vmafEncode()
  * @method static \Foxws\AV1\MediaOpener crfSearch()
  * @method static \Foxws\AV1\MediaOpener sampleEncode()
  * @method static \Foxws\AV1\MediaOpener encode()

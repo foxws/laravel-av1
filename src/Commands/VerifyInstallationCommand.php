@@ -26,7 +26,8 @@ class VerifyInstallationCommand extends Command
     {
         info('🔍 Verifying ab-av1 installation...');
 
-        $binaryPath = Config::get('av1.binary_path');
+        $config = app('av1-ab-av1-configuration');
+        $binaryPath = $config['binary_path'];
 
         note("Binary Path: {$binaryPath}");
 
@@ -65,20 +66,18 @@ class VerifyInstallationCommand extends Command
         }
 
         // Configuration details
-        $timeout = Config::get('av1.timeout');
-        $encoder = Config::get('av1.encoder');
-        $preset = Config::get('av1.preset');
-        $minVmaf = Config::get('av1.min_vmaf');
+        $timeout = $config['timeout'];
+        $preset = $config['preset'];
+        $minVmaf = $config['min_vmaf'];
         $logChannel = Config::get('av1.log_channel');
         $logStatus = $logChannel === false ? 'Disabled' : ($logChannel ?: Config::get('logging.default'));
-        $tempDir = Config::get('av1.temporary_files_root');
+        $tempDir = $config['temporary_files_root'];
 
         table(
             ['Configuration', 'Value', 'Status'],
             [
                 ['Binary Path', $binaryPath, '✓'],
                 ['Timeout', "{$timeout} seconds", '✓'],
-                ['Default Encoder', $encoder, '✓'],
                 ['Default Preset', $preset, '✓'],
                 ['Min VMAF', $minVmaf, '✓'],
                 ['Log Channel', $logStatus, '✓'],

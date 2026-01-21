@@ -19,10 +19,10 @@ use Illuminate\Support\Facades\Log;
  *
  * Automatically finds the best CRF value to achieve target VMAF score
  */
-function autoEncodeExample()
+function vmafEncodeExample()
 {
     $result = AV1::open('videos/input.mp4')
-        ->autoEncode()
+        ->vmafEncode()
         ->preset('6')          // Encoder preset (0-13 for svt-av1)
         ->minVmaf(95)          // Target VMAF score
         ->export()
@@ -124,7 +124,7 @@ function s3ToS3Example()
 {
     $result = AV1::fromDisk('s3')
         ->open('videos/input.mp4')
-        ->autoEncode()
+        ->vmafEncode()
         ->preset('6')
         ->minVmaf(95)
         ->export()
@@ -159,7 +159,7 @@ function batchProcessingExample()
     AV1::fromDisk('s3')
         ->each($videos, function ($av1, $video) {
             $av1->open("source/{$video}")
-                ->autoEncode()
+                ->vmafEncode()
                 ->preset('6')
                 ->minVmaf(95)
                 ->export()
@@ -182,7 +182,7 @@ function batchProcessingExample()
 function advancedEncodingExample()
 {
     $result = AV1::open('input.mp4')
-        ->autoEncode()
+        ->vmafEncode()
         ->withEncoder('svt-av1')        // or 'rav1e', 'aom'
         ->preset('6')
         ->minVmaf(95)
@@ -201,7 +201,7 @@ function advancedEncodingExample()
 function customVmafModelExample()
 {
     $result = AV1::open('input.mp4')
-        ->autoEncode()
+        ->vmafEncode()
         ->preset('6')
         ->minVmaf(95)
         ->vmafModel('/path/to/vmaf_model.json')
@@ -216,7 +216,7 @@ function callbacksExample()
 {
     try {
         $result = AV1::open('input.mp4')
-            ->autoEncode()
+            ->vmafEncode()
             ->preset('6')
             ->minVmaf(95)
             ->export()
@@ -249,7 +249,7 @@ function callbacksExample()
 function debuggingExample()
 {
     $command = AV1::open('input.mp4')
-        ->autoEncode()
+        ->vmafEncode()
         ->preset('6')
         ->minVmaf(95)
         ->export()
@@ -265,7 +265,7 @@ function debuggingExample()
 function dumpAndDieExample()
 {
     AV1::open('input.mp4')
-        ->autoEncode()
+        ->vmafEncode()
         ->preset('6')
         ->minVmaf(95)
         ->export()
@@ -291,7 +291,7 @@ class EncodeVideoJob implements ShouldQueue
     {
         $result = AV1::fromDisk('s3')
             ->open($this->inputPath)
-            ->autoEncode()
+            ->vmafEncode()
             ->preset('6')
             ->minVmaf($this->targetVmaf)
             ->export()

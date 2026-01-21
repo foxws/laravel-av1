@@ -46,18 +46,19 @@ class PackageInfoCommand extends Command
         note("ab-av1 Version: {$abav1Version}");
 
         // Configuration table
+        $config = app('av1-ab-av1-configuration');
+        $binaryPath = $config['binary_path'];
         $logChannel = Config::get('av1.log_channel');
         $logStatus = $logChannel === false ? 'Disabled' : ($logChannel ?: 'Default');
 
         table(
             ['Configuration', 'Value'],
             [
-                ['Binary Path', Config::get('av1.binary_path')],
-                ['Timeout', Config::get('av1.timeout').' seconds'],
-                ['Default Encoder', Config::get('av1.encoder')],
-                ['Default Preset', Config::get('av1.preset')],
-                ['Min VMAF', Config::get('av1.min_vmaf')],
-                ['Temp Directory', Config::get('av1.temporary_files_root')],
+                ['Binary Path', $binaryPath],
+                ['Timeout', $config['timeout'].' seconds'],
+                ['Default Preset', $config['preset']],
+                ['Min VMAF', $config['min_vmaf']],
+                ['Temp Directory', $config['temporary_files_root']],
                 ['Logging', $logStatus],
             ]
         );

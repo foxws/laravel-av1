@@ -4,26 +4,28 @@ declare(strict_types=1);
 
 namespace Foxws\AV1\Support;
 
+use Illuminate\Process\ProcessResult;
+
 class EncoderResult
 {
     public function __construct(
-        protected ProcessOutput $processOutput,
+        protected ProcessResult $processOutput,
         protected ?string $outputPath = null,
     ) {}
 
     public function isSuccessful(): bool
     {
-        return $this->processOutput->isSuccessful();
+        return $this->processOutput->successful();
     }
 
     public function getOutput(): string
     {
-        return $this->processOutput->getOutput();
+        return $this->processOutput->output();
     }
 
     public function getErrorOutput(): string
     {
-        return $this->processOutput->getErrorOutput();
+        return $this->processOutput->errorOutput();
     }
 
     public function getOutputPath(): ?string
@@ -33,6 +35,6 @@ class EncoderResult
 
     public function getExitCode(): int
     {
-        return $this->processOutput->exitCode;
+        return $this->processOutput->exitCode();
     }
 }
