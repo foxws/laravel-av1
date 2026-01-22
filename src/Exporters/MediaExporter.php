@@ -122,6 +122,17 @@ class MediaExporter
         // Set output path in builder if not already set
         $builder = $this->encoder->builder();
 
+        // Set input file from media collection if not already set
+        if (! $builder->getInput()) {
+            $mediaCollection = $this->encoder->getMediaCollection();
+
+            if ($mediaCollection && $mediaCollection->count() > 0) {
+                $firstMedia = $mediaCollection->first();
+
+                $builder->input($firstMedia->getLocalPath());
+            }
+        }
+
         if (! $builder->getOutput()) {
             $outputPath = $path ?? 'output.mp4';
 
@@ -153,18 +164,41 @@ class MediaExporter
             }
 
             $disk = $this->getDisk();
-            $contents = File::get($outputPath);
 
-            if ($this->visibility) {
-                $disk->put($destinationPath, $contents, ['visibility' => $this->visibility]);
+            // Ensure parent directory exists
+            $directory = dirname($destinationPath);
+            if ($directory && $directory !== '.') {
+                $disk->makeDirectory($directory);
+            }
+
+            // Stream large video files for better memory efficiency
+            $fileSize = filesize($outputPath);
+            $isLargeFile = $fileSize > 10 * 1024 * 1024; // > 10MB
+
+            if ($isLargeFile) {
+                $stream = fopen($outputPath, 'rb');
+                $disk->writeStream($destinationPath, $stream);
+
+                if (is_resource($stream)) {
+                    fclose($stream);
+                }
             } else {
+                $contents = File::get($outputPath);
                 $disk->put($destinationPath, $contents);
+            }
+
+            // Set visibility if specified
+            if ($this->visibility) {
+                $disk->setVisibility($destinationPath, $this->visibility);
             }
 
             // Call after-saving callbacks
             foreach ($this->afterSavingCallbacks as $callback) {
                 $callback($result, $destinationPath);
             }
+
+            // Clean up temporary file
+            @unlink($outputPath);
         }
 
         return $result;
