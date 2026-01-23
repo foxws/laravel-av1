@@ -126,9 +126,8 @@ class MediaExporter
         if (! $builder->getInput()) {
             $mediaCollection = $this->encoder->getMediaCollection();
 
-            if ($mediaCollection && $mediaCollection->count() > 0) {
+            if ($mediaCollection->count() > 0) {
                 $firstMedia = $mediaCollection->first();
-
                 $builder->input($firstMedia->getLocalPath());
             }
         }
