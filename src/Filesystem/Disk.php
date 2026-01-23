@@ -13,6 +13,7 @@ use Illuminate\Support\Traits\ForwardsCalls;
  * @method string|null get(string $path)
  * @method resource|null readStream(string $path)
  * @method bool put(string $path, mixed $contents, array $options = [])
+ * @method bool writeStream(string $path, $resource, array $options = [])
  * @method bool makeDirectory(string $path)
  * @method bool delete(string|array $paths)
  * @method bool setVisibility(string $path, string $visibility)
