@@ -20,7 +20,6 @@ class AbAV1Encoder implements EncoderInterface
     protected ?int $timeout;
 
     public function __construct(
-        ?string $binaryPath = null,
         ?LoggerInterface $logger = null,
         ?int $timeout = null
     ) {
@@ -34,7 +33,6 @@ class AbAV1Encoder implements EncoderInterface
         ?array $configuration = null
     ): self {
         return new self(
-            $configuration['binary_path'] ?? null,
             $logger,
             $configuration['timeout'] ?? null
         );
