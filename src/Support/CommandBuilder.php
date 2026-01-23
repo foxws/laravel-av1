@@ -260,101 +260,38 @@ class CommandBuilder
 
         $arguments = ['ab-av1', $this->command];
 
-        // Add command-specific required arguments
-        switch ($this->command) {
-            case 'auto-encode':
-                if (! $this->input) {
-                    throw new InvalidArgumentException('Input file is required');
-                }
-                if (! $this->output) {
-                    throw new InvalidArgumentException('Output file is required');
-                }
-                if (! isset($this->options['preset'])) {
-                    throw new InvalidArgumentException('Preset required');
-                }
-                if (! isset($this->options['min-vmaf'])) {
-                    throw new InvalidArgumentException('Min VMAF required');
-                }
-                $arguments[] = '-i';
-                $arguments[] = $this->input;
-                break;
+        // Define command requirements
+        $requirements = [
+            'auto-encode' => ['input', 'output', 'preset', 'min-vmaf'],
+            'crf-search' => ['input', 'output', 'preset', 'min-vmaf'],
+            'sample-encode' => ['input', 'output', 'preset', 'crf'],
+            'encode' => ['input', 'output', 'preset', 'crf'],
+            'vmaf' => ['reference', 'distorted'],
+            'xpsnr' => ['reference', 'distorted'],
+        ];
 
-            case 'crf-search':
-                if (! $this->input) {
-                    throw new InvalidArgumentException('Input file is required');
+        // Validate requirements
+        foreach ($requirements[$this->command] ?? [] as $required) {
+            if (in_array($required, ['input', 'output', 'reference', 'distorted'])) {
+                if (! $this->$required) {
+                    throw new InvalidArgumentException(ucfirst($required).' file is required');
                 }
-                if (! $this->output) {
-                    throw new InvalidArgumentException('Output file is required');
-                }
-                if (! isset($this->options['preset'])) {
-                    throw new InvalidArgumentException('Preset required');
-                }
-                if (! isset($this->options['min-vmaf'])) {
-                    throw new InvalidArgumentException('Min VMAF required');
-                }
-                $arguments[] = '-i';
-                $arguments[] = $this->input;
-                break;
+            } elseif (! isset($this->options[$required])) {
+                throw new InvalidArgumentException(ucfirst(str_replace('-', ' ', $required)).' required');
+            }
+        }
 
-            case 'sample-encode':
-                if (! $this->input) {
-                    throw new InvalidArgumentException('Input file is required');
-                }
-                if (! $this->output) {
-                    throw new InvalidArgumentException('Output file is required');
-                }
-                if (! isset($this->options['crf'])) {
-                    throw new InvalidArgumentException('CRF required');
-                }
-                if (! isset($this->options['preset'])) {
-                    throw new InvalidArgumentException('Preset required');
-                }
-                $arguments[] = '-i';
-                $arguments[] = $this->input;
-                break;
+        // Add command arguments
+        if ($this->input && in_array($this->command, ['auto-encode', 'crf-search', 'sample-encode', 'encode'])) {
+            $arguments[] = '-i';
+            $arguments[] = $this->input;
+        }
 
-            case 'encode':
-                if (! $this->input) {
-                    throw new InvalidArgumentException('Input file is required');
-                }
-                if (! $this->output) {
-                    throw new InvalidArgumentException('Output file is required');
-                }
-                if (! isset($this->options['crf'])) {
-                    throw new InvalidArgumentException('CRF required');
-                }
-                if (! isset($this->options['preset'])) {
-                    throw new InvalidArgumentException('Preset required');
-                }
-                $arguments[] = '-i';
-                $arguments[] = $this->input;
-                break;
-
-            case 'vmaf':
-                if (! $this->reference) {
-                    throw new InvalidArgumentException('Reference file is required');
-                }
-                if (! $this->distorted) {
-                    throw new InvalidArgumentException('Distorted file is required');
-                }
-                $arguments[] = '--reference';
-                $arguments[] = $this->reference;
-                $arguments[] = '--distorted';
-                $arguments[] = $this->distorted;
-                break;
-
-            case 'xpsnr':
-                if (! $this->reference) {
-                    throw new InvalidArgumentException('Reference file is required');
-                }
-                if (! $this->distorted) {
-                    throw new InvalidArgumentException('Distorted file is required');
-                }
-                $arguments[] = '--reference';
-                $arguments[] = $this->reference;
-                $arguments[] = '--distorted';
-                $arguments[] = $this->distorted;
-                break;
+        if ($this->reference && in_array($this->command, ['vmaf', 'xpsnr'])) {
+            $arguments[] = '--reference';
+            $arguments[] = $this->reference;
+            $arguments[] = '--distorted';
+            $arguments[] = $this->distorted;
         }
 
         // Add output for encode commands

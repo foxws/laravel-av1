@@ -144,13 +144,27 @@ class Encoder
      */
     public function run(): EncoderResult
     {
+        // Get the desired output path from builder
+        $desiredOutputPath = $this->builder->getOutput();
+
+        // Resolve to temporary directory for encoding
+        $tempOutputPath = $this->resolveOutputPath($desiredOutputPath);
+
+        // Ensure temporary directory and subdirectories exist
+        $tempDirectory = dirname($tempOutputPath);
+
+        if (! is_dir($tempDirectory)) {
+            mkdir($tempDirectory, 0755, true);
+        }
+
+        // Update builder with temporary output path for encoding
+        $this->builder->output($tempOutputPath);
+
         $arguments = $this->builder->buildArray();
 
         $processOutput = $this->encoder->run($arguments);
 
-        $outputPath = $this->builder->getOutput();
-
-        return new EncoderResult($processOutput, $outputPath);
+        return new EncoderResult($processOutput, $tempOutputPath);
     }
 
     /**

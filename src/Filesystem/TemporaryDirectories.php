@@ -27,6 +27,14 @@ class TemporaryDirectories
     }
 
     /**
+     * Get the root temporary directory path.
+     */
+    public function getRoot(): string
+    {
+        return $this->root;
+    }
+
+    /**
      * Returns the full path of a new temporary directory.
      */
     public function create(): string
