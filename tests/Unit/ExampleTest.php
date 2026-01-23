@@ -131,7 +131,7 @@ it('throws when crf-search missing required minVmaf', function () {
         ->preset('6');
 
     $builder->buildArray();
-})->throws(InvalidArgumentException::class, 'Min VMAF required');
+})->throws(InvalidArgumentException::class, 'Min vmaf required');
 
 it('throws when encode missing required crf', function () {
     $builder = CommandBuilder::make()
@@ -141,7 +141,7 @@ it('throws when encode missing required crf', function () {
         ->preset('6');
 
     $builder->buildArray();
-})->throws(InvalidArgumentException::class, 'CRF required');
+})->throws(InvalidArgumentException::class, 'Crf required');
 
 it('throws when vmaf missing reference', function () {
     $builder = CommandBuilder::make()

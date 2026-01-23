@@ -272,12 +272,15 @@ class CommandBuilder
 
         // Validate requirements
         foreach ($requirements[$this->command] ?? [] as $required) {
+            $label = str_replace(['crf', 'vmaf'], ['CRF', 'VMAF'], $required);
+            $label = ucfirst(str_replace('-', ' ', $label));
+
             if (in_array($required, ['input', 'output', 'reference', 'distorted'])) {
                 if (! $this->$required) {
-                    throw new InvalidArgumentException(ucfirst($required).' file is required');
+                    throw new InvalidArgumentException($label.' file is required');
                 }
             } elseif (! isset($this->options[$required])) {
-                throw new InvalidArgumentException(ucfirst(str_replace('-', ' ', $required)).' required');
+                throw new InvalidArgumentException($label.' required');
             }
         }
 
