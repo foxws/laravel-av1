@@ -40,12 +40,14 @@ return [
     | timeout: Maximum time in seconds to wait for commands (null for no timeout)
     | preset: Default encoder preset (0-13 for svt-av1, higher = faster/larger)
     | min_vmaf: Minimum VMAF score to target (0-100, higher = better quality)
+    | max_encoded_percent: Maximum size of encoded file as percentage of source
     |
     */
     'ab-av1' => [
-        'timeout' => env('AB_AV1_TIMEOUT', 3600),
+        'timeout' => env('AB_AV1_TIMEOUT', 14400), // 4 hours
         'preset' => env('AB_AV1_PRESET', 6),
-        'min_vmaf' => env('AB_AV1_MIN_VMAF', 95),
+        'min_vmaf' => env('AB_AV1_MIN_VMAF', 80),
+        'max_encoded_percent' => env('AB_AV1_MAX_PERCENT', 300),
     ],
 
     /*
