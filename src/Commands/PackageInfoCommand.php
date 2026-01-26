@@ -6,7 +6,6 @@ namespace Foxws\AV1\Commands;
 
 use Foxws\AV1\Support\AbAV1Encoder;
 use Illuminate\Console\Command;
-use Illuminate\Support\Facades\Config;
 
 use function Laravel\Prompts\info;
 use function Laravel\Prompts\note;
