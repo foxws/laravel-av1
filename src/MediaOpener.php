@@ -28,16 +28,22 @@ class MediaOpener
 
     protected ?MediaCollection $collection = null;
 
+    protected array $abAv1Config = [];
+
     public function __construct(
         Disk|string|null $disk = null,
         ?Encoder $encoder = null,
-        ?MediaCollection $mediaCollection = null
+        ?MediaCollection $mediaCollection = null,
+        ?array $abAv1Config = null
     ) {
         $this->fromDisk($disk ?: Config::string('filesystems.default'));
 
         $this->encoder = $encoder ?: app(Encoder::class);
 
         $this->collection = $mediaCollection ?: new MediaCollection;
+
+        // Use the provided config, or resolve from container
+        $this->abAv1Config = $abAv1Config ?? app('av1-ab-av1-configuration');
     }
 
     public function clone(): self
@@ -45,7 +51,8 @@ class MediaOpener
         return new MediaOpener(
             $this->disk,
             $this->encoder,
-            $this->collection
+            $this->collection,
+            $this->abAv1Config
         );
     }
 
@@ -151,21 +158,47 @@ class MediaOpener
      */
 
     /**
-     * Set command to auto-encode
+     * Set command to auto-encode with defaults from configuration
      */
     public function vmafEncode(): self
     {
         $this->encoder->builder()->command('auto-encode');
 
+        // Apply default configuration values
+        if (isset($this->abAv1Config['preset'])) {
+            $this->encoder->builder()->preset((string) $this->abAv1Config['preset']);
+        }
+
+        if (isset($this->abAv1Config['min_vmaf'])) {
+            $this->encoder->builder()->minVmaf($this->abAv1Config['min_vmaf']);
+        }
+
+        if (isset($this->abAv1Config['max_encoded_percent'])) {
+            $this->encoder->builder()->maxEncodedPercent($this->abAv1Config['max_encoded_percent']);
+        }
+
         return $this;
     }
 
     /**
-     * Set command to crf-search
+     * Set command to crf-search with defaults from configuration
      */
     public function crfSearch(): self
     {
         $this->encoder->builder()->command('crf-search');
+
+        // Apply default configuration values
+        if (isset($this->abAv1Config['preset'])) {
+            $this->encoder->builder()->preset((string) $this->abAv1Config['preset']);
+        }
+
+        if (isset($this->abAv1Config['min_vmaf'])) {
+            $this->encoder->builder()->minVmaf($this->abAv1Config['min_vmaf']);
+        }
+
+        if (isset($this->abAv1Config['max_encoded_percent'])) {
+            $this->encoder->builder()->maxEncodedPercent($this->abAv1Config['max_encoded_percent']);
+        }
 
         return $this;
     }
