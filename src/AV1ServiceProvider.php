@@ -40,16 +40,6 @@ class AV1ServiceProvider extends PackageServiceProvider
             return Config::get('av1');
         });
 
-        $this->app->singleton('av1-ab-av1-configuration', function () {
-            return [
-                'binary_path' => Config::string('av1.binaries.ab-av1', 'ab-av1'),
-                'timeout' => Config::integer('av1.ab-av1.timeout'),
-                'preset' => Config::get('av1.ab-av1.preset'),
-                'min_vmaf' => Config::get('av1.ab-av1.min_vmaf'),
-                'temporary_files_root' => Config::string('av1.temporary_files_root'),
-            ];
-        });
-
         $this->app->singleton(TemporaryDirectories::class, function () {
             return new TemporaryDirectories(
                 config('av1.temporary_files_root', sys_get_temp_dir()),
@@ -58,11 +48,11 @@ class AV1ServiceProvider extends PackageServiceProvider
 
         $this->app->bind(AbAV1Encoder::class, function ($app) {
             $logger = $app->make('laravel-av1-logger');
-            $config = $app->make('av1-ab-av1-configuration');
+            $config = $app->make('laravel-av1-configuration');
 
             return AbAV1Encoder::create(
                 $logger,
-                $config
+                $config['ab-av1'] ?? []
             );
         });
 

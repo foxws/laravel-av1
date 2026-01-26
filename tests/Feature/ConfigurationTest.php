@@ -278,12 +278,13 @@ describe('auto config behavior', function () {
 
         $opener = AV1::vmafEncode()->input('test.mp4')->output('output.mp4');
 
-        $options = $opener->getEncoder()->builder()->getOptions();
+        $builder = $opener->getEncoder()->builder();
+        $options = $builder->getOptions();
 
         expect($options['preset'])->toBe('7');
         expect($options['min-vmaf'])->toBe(86);
-        expect($options['input'])->toBe('test.mp4');
-        expect($options['output'])->toBe('output.mp4');
+        expect($builder->getInput())->toBe('test.mp4');
+        expect($builder->getOutput())->toBe('output.mp4');
     });
 
     it('preserves auto config through clone operation', function () {

@@ -26,8 +26,8 @@ class VerifyInstallationCommand extends Command
     {
         info('🔍 Verifying ab-av1 installation...');
 
-        $config = app('av1-ab-av1-configuration');
-        $binaryPath = $config['binary_path'];
+        $config = app('laravel-av1-configuration');
+        $binaryPath = $config['binaries']['ab-av1'] ?? 'ab-av1';
 
         note("Binary Path: {$binaryPath}");
 
