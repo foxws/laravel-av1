@@ -172,7 +172,7 @@ class MediaExporter
 
             // Stream large video files for better memory efficiency
             $fileSize = filesize($outputPath);
-            $isLargeFile = $fileSize > 10 * 1024 * 1024; // > 10MB
+            $isLargeFile = $fileSize > 10 * 1024 * 1024; // 10MB
 
             if ($isLargeFile) {
                 $stream = fopen($outputPath, 'rb');

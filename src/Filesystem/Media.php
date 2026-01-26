@@ -59,9 +59,26 @@ class Media
         $temporaryDirectory = app(TemporaryDirectories::class)->create();
         $localPath = $temporaryDirectory.'/'.basename($this->path);
 
+        // Stream download for better memory efficiency
         $stream = $this->disk->readStream($this->path);
-        file_put_contents($localPath, $stream);
 
+        if (! $stream) {
+            throw new MediaNotFoundException("Failed to read stream for: {$this->path}");
+        }
+
+        $localStream = fopen($localPath, 'wb');
+
+        if (! $localStream) {
+            if (is_resource($stream)) {
+                fclose($stream);
+            }
+            throw new \RuntimeException("Failed to create local file: {$localPath}");
+        }
+
+        // Stream copy in chunks for memory efficiency
+        stream_copy_to_stream($stream, $localStream);
+
+        fclose($localStream);
         if (is_resource($stream)) {
             fclose($stream);
         }
