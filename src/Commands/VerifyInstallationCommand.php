@@ -66,12 +66,12 @@ class VerifyInstallationCommand extends Command
         }
 
         // Configuration details
-        $timeout = $config['timeout'];
-        $preset = $config['preset'];
-        $minVmaf = $config['min_vmaf'];
-        $logChannel = Config::get('av1.log_channel');
-        $logStatus = $logChannel === false ? 'Disabled' : ($logChannel ?: Config::get('logging.default'));
-        $tempDir = $config['temporary_files_root'];
+        $timeout = $config['ab-av1']['timeout'] ?? 'N/A';
+        $preset = $config['ab-av1']['preset'] ?? 'N/A';
+        $minVmaf = $config['ab-av1']['min_vmaf'] ?? 'N/A';
+        $logChannel = $config['log_channel'] ?? null;
+        $logStatus = $logChannel === false ? 'Disabled' : ($logChannel ?: 'Default');
+        $tempDir = $config['temporary_files_root'] ?? 'N/A';
 
         table(
             ['Configuration', 'Value', 'Status'],
