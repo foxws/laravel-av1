@@ -7,7 +7,6 @@ namespace Foxws\AV1\Commands;
 use Foxws\AV1\Exceptions\ExecutableNotFoundException;
 use Foxws\AV1\Support\AbAV1Encoder;
 use Illuminate\Console\Command;
-use Illuminate\Support\Facades\Config;
 
 use function Laravel\Prompts\error;
 use function Laravel\Prompts\info;
@@ -26,8 +25,8 @@ class VerifyInstallationCommand extends Command
     {
         info('🔍 Verifying ab-av1 installation...');
 
-        $config = app('av1-ab-av1-configuration');
-        $binaryPath = $config['binary_path'];
+        $config = app('laravel-av1-configuration');
+        $binaryPath = $config['binaries']['ab-av1'] ?? 'ab-av1';
 
         note("Binary Path: {$binaryPath}");
 
@@ -66,12 +65,12 @@ class VerifyInstallationCommand extends Command
         }
 
         // Configuration details
-        $timeout = $config['timeout'];
-        $preset = $config['preset'];
-        $minVmaf = $config['min_vmaf'];
-        $logChannel = Config::get('av1.log_channel');
-        $logStatus = $logChannel === false ? 'Disabled' : ($logChannel ?: Config::get('logging.default'));
-        $tempDir = $config['temporary_files_root'];
+        $timeout = $config['ab-av1']['timeout'] ?? 'N/A';
+        $preset = $config['ab-av1']['preset'] ?? 'N/A';
+        $minVmaf = $config['ab-av1']['min_vmaf'] ?? 'N/A';
+        $logChannel = $config['log_channel'] ?? null;
+        $logStatus = $logChannel === false ? 'Disabled' : ($logChannel ?: 'Default');
+        $tempDir = $config['temporary_files_root'] ?? 'N/A';
 
         table(
             ['Configuration', 'Value', 'Status'],

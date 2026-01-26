@@ -383,9 +383,10 @@ AV1::open('input.mp4')
 - `AB_AV1_BINARY_PATH` - Path to ab-av1 binary (default: 'ab-av1')
 - `FFMPEG_BINARY_PATH` - Path to ffmpeg binary with libsvtav1, libvmaf, libopus (default: 'ffmpeg')
 - `AB_AV1_LOG_CHANNEL` - Log channel to use (false to disable, null for default)
-- `AB_AV1_TIMEOUT` - Maximum time in seconds for encoding commands (default: 3600)
+- `AB_AV1_TIMEOUT` - Maximum time in seconds for encoding commands (default: 14400)
 - `AB_AV1_PRESET` - Default encoder preset 0-13 for svt-av1 (default: 6)
-- `AB_AV1_MIN_VMAF` - Minimum VMAF score to target (default: 95)
+- `AB_AV1_MIN_VMAF` - Minimum VMAF score to target (default: 80)
+- `AB_AV1_MAX_PERCENT` - Maximum encoded file size as percentage (default: 300)
 - `AB_AV1_TEMPORARY_FILES_ROOT` - Directory for temporary files (default: storage/app/av1/temp)
 
 ## Error Handling

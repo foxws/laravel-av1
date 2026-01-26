@@ -86,3 +86,215 @@ it('can override configured min-vmaf', function () {
 
     expect($options['min-vmaf'])->toBe(95);
 });
+// Auto Config Tests
+
+describe('auto config for vmafEncode', function () {
+    it('applies configured preset to vmafEncode', function () {
+        Config::set('av1.ab-av1.preset', '8');
+
+        $opener = AV1::vmafEncode();
+
+        $options = $opener->getEncoder()->builder()->getOptions();
+
+        expect($options['preset'])->toBe('8');
+    });
+
+    it('applies configured min_vmaf to vmafEncode', function () {
+        Config::set('av1.ab-av1.min_vmaf', 85);
+
+        $opener = AV1::vmafEncode();
+
+        $options = $opener->getEncoder()->builder()->getOptions();
+
+        expect($options['min-vmaf'])->toBe(85);
+    });
+
+    it('applies configured max_encoded_percent to vmafEncode', function () {
+        Config::set('av1.ab-av1.max_encoded_percent', 250);
+
+        $opener = AV1::vmafEncode();
+
+        $options = $opener->getEncoder()->builder()->getOptions();
+
+        expect($options['max-encoded-percent'])->toBe(250);
+    });
+
+    it('applies all auto config values to vmafEncode', function () {
+        Config::set('av1.ab-av1.preset', '7');
+        Config::set('av1.ab-av1.min_vmaf', 90);
+        Config::set('av1.ab-av1.max_encoded_percent', 275);
+
+        $opener = AV1::vmafEncode();
+
+        $options = $opener->getEncoder()->builder()->getOptions();
+
+        expect($options['preset'])->toBe('7');
+        expect($options['min-vmaf'])->toBe(90);
+        expect($options['max-encoded-percent'])->toBe(275);
+    });
+
+    it('allows overriding auto config values in vmafEncode', function () {
+        Config::set('av1.ab-av1.preset', '6');
+        Config::set('av1.ab-av1.min_vmaf', 80);
+        Config::set('av1.ab-av1.max_encoded_percent', 300);
+
+        $opener = AV1::vmafEncode()
+            ->preset('9')
+            ->minVmaf(95)
+            ->maxEncodedPercent(200);
+
+        $options = $opener->getEncoder()->builder()->getOptions();
+
+        expect($options['preset'])->toBe('9');
+        expect($options['min-vmaf'])->toBe(95);
+        expect($options['max-encoded-percent'])->toBe(200);
+    });
+
+    it('handles missing config values gracefully in vmafEncode', function () {
+        Config::set('av1.ab-av1.preset', null);
+        Config::set('av1.ab-av1.min_vmaf', null);
+
+        $opener = AV1::vmafEncode();
+
+        $options = $opener->getEncoder()->builder()->getOptions();
+
+        expect($options)->not->toHaveKey('preset');
+        expect($options)->not->toHaveKey('min-vmaf');
+    });
+});
+
+describe('auto config for crfSearch', function () {
+    it('applies configured preset to crfSearch', function () {
+        Config::set('av1.ab-av1.preset', '5');
+
+        $opener = AV1::crfSearch();
+
+        $options = $opener->getEncoder()->builder()->getOptions();
+
+        expect($options['preset'])->toBe('5');
+    });
+
+    it('applies configured min_vmaf to crfSearch', function () {
+        Config::set('av1.ab-av1.min_vmaf', 88);
+
+        $opener = AV1::crfSearch();
+
+        $options = $opener->getEncoder()->builder()->getOptions();
+
+        expect($options['min-vmaf'])->toBe(88);
+    });
+
+    it('applies configured max_encoded_percent to crfSearch', function () {
+        Config::set('av1.ab-av1.max_encoded_percent', 260);
+
+        $opener = AV1::crfSearch();
+
+        $options = $opener->getEncoder()->builder()->getOptions();
+
+        expect($options['max-encoded-percent'])->toBe(260);
+    });
+
+    it('applies all auto config values to crfSearch', function () {
+        Config::set('av1.ab-av1.preset', '4');
+        Config::set('av1.ab-av1.min_vmaf', 92);
+        Config::set('av1.ab-av1.max_encoded_percent', 280);
+
+        $opener = AV1::crfSearch();
+
+        $options = $opener->getEncoder()->builder()->getOptions();
+
+        expect($options['preset'])->toBe('4');
+        expect($options['min-vmaf'])->toBe(92);
+        expect($options['max-encoded-percent'])->toBe(280);
+    });
+
+    it('allows overriding auto config values in crfSearch', function () {
+        Config::set('av1.ab-av1.preset', '5');
+        Config::set('av1.ab-av1.min_vmaf', 85);
+        Config::set('av1.ab-av1.max_encoded_percent', 270);
+
+        $opener = AV1::crfSearch()
+            ->preset('10')
+            ->minVmaf(88)
+            ->maxEncodedPercent(220);
+
+        $options = $opener->getEncoder()->builder()->getOptions();
+
+        expect($options['preset'])->toBe('10');
+        expect($options['min-vmaf'])->toBe(88);
+        expect($options['max-encoded-percent'])->toBe(220);
+    });
+
+    it('handles missing config values gracefully in crfSearch', function () {
+        Config::set('av1.ab-av1.preset', null);
+        Config::set('av1.ab-av1.min_vmaf', null);
+
+        $opener = AV1::crfSearch();
+
+        $options = $opener->getEncoder()->builder()->getOptions();
+
+        expect($options)->not->toHaveKey('preset');
+        expect($options)->not->toHaveKey('min-vmaf');
+    });
+});
+
+describe('auto config behavior', function () {
+    it('does not apply auto config to sampleEncode command', function () {
+        Config::set('av1.ab-av1.preset', '6');
+        Config::set('av1.ab-av1.min_vmaf', 80);
+
+        $opener = AV1::sampleEncode();
+
+        $options = $opener->getEncoder()->builder()->getOptions();
+
+        // sampleEncode should not auto-apply these configs
+        expect($options)->not->toHaveKey('preset');
+        expect($options)->not->toHaveKey('min-vmaf');
+    });
+
+    it('does not apply auto config to encode command', function () {
+        Config::set('av1.ab-av1.preset', '6');
+
+        $opener = AV1::encode();
+
+        $options = $opener->getEncoder()->builder()->getOptions();
+
+        expect($options)->not->toHaveKey('preset');
+    });
+
+    it('does not apply auto config to vmaf command', function () {
+        Config::set('av1.ab-av1.preset', '6');
+
+        $opener = AV1::vmaf();
+
+        $options = $opener->getEncoder()->builder()->getOptions();
+
+        expect($options)->not->toHaveKey('preset');
+    });
+
+    it('applies auto config when chaining from AV1 facade', function () {
+        Config::set('av1.ab-av1.preset', '7');
+        Config::set('av1.ab-av1.min_vmaf', 86);
+
+        $opener = AV1::vmafEncode()->input('test.mp4')->output('output.mp4');
+
+        $builder = $opener->getEncoder()->builder();
+        $options = $builder->getOptions();
+
+        expect($options['preset'])->toBe('7');
+        expect($options['min-vmaf'])->toBe(86);
+        expect($builder->getInput())->toBe('test.mp4');
+        expect($builder->getOutput())->toBe('output.mp4');
+    });
+
+    it('preserves auto config through clone operation', function () {
+        Config::set('av1.ab-av1.preset', '8');
+
+        $opener1 = AV1::vmafEncode();
+        $opener2 = $opener1->clone();
+
+        $options2 = $opener2->getEncoder()->builder()->getOptions();
+
+        expect($options2['preset'])->toBe('8');
+    });
+});

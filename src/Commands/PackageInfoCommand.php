@@ -6,7 +6,6 @@ namespace Foxws\AV1\Commands;
 
 use Foxws\AV1\Support\AbAV1Encoder;
 use Illuminate\Console\Command;
-use Illuminate\Support\Facades\Config;
 
 use function Laravel\Prompts\info;
 use function Laravel\Prompts\note;
@@ -46,19 +45,19 @@ class PackageInfoCommand extends Command
         note("ab-av1 Version: {$abav1Version}");
 
         // Configuration table
-        $config = app('av1-ab-av1-configuration');
-        $binaryPath = $config['binary_path'];
-        $logChannel = Config::get('av1.log_channel');
+        $config = app('laravel-av1-configuration');
+        $binaryPath = $config['binaries']['ab-av1'] ?? 'ab-av1';
+        $logChannel = $config['log_channel'] ?? null;
         $logStatus = $logChannel === false ? 'Disabled' : ($logChannel ?: 'Default');
 
         table(
             ['Configuration', 'Value'],
             [
                 ['Binary Path', $binaryPath],
-                ['Timeout', $config['timeout'].' seconds'],
-                ['Default Preset', $config['preset']],
-                ['Min VMAF', $config['min_vmaf']],
-                ['Temp Directory', $config['temporary_files_root']],
+                ['Timeout', ($config['ab-av1']['timeout'] ?? 'N/A').' seconds'],
+                ['Default Preset', $config['ab-av1']['preset'] ?? 'N/A'],
+                ['Min VMAF', $config['ab-av1']['min_vmaf'] ?? 'N/A'],
+                ['Temp Directory', $config['temporary_files_root'] ?? 'N/A'],
                 ['Logging', $logStatus],
             ]
         );
