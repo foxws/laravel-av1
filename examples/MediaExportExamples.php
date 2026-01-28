@@ -5,13 +5,18 @@
  */
 
 use Foxws\AV1\Facades\AV1;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Storage;
 
 // Example 1: Encode and export to S3
 AV1::encoder()
     ->crf(28)
     ->preset(6)
     ->useHwAccel()
-    ->encode('local/input.mp4', 'temp/output.mp4')
+    ->encode(
+        storage_path('app/input.mp4'),
+        storage_path('app/temp/output.mp4')
+    )
     ->export()
     ->toDisk('s3')
     ->toPath('videos/encoded')
@@ -20,7 +25,10 @@ AV1::encoder()
 // Example 2: Encode locally, keep control
 $result = AV1::encoder()
     ->crf(28)
-    ->encode('input.mp4', 'output.mp4');
+    ->encode(
+        storage_path('app/input.mp4'),
+        storage_path('app/output.mp4')
+    );
 
 if ($result->successful()) {
     // Export to multiple destinations
@@ -31,7 +39,10 @@ if ($result->successful()) {
 // Example 3: Public file on CDN
 AV1::encoder()
     ->crf(30)
-    ->encode('input.mp4', 'output.mp4')
+    ->encode(
+        storage_path('app/input.mp4'),
+        storage_path('app/output.mp4')
+    )
     ->export()
     ->toDisk('s3-public')
     ->toPath('videos/public')
@@ -43,7 +54,10 @@ AV1::encoder()
 $result = AV1::encoder()
     ->crf(28)
     ->useHwAccel()
-    ->encode('input.mp4', storage_path('app/temp/output.mp4'));
+    ->encode(
+        storage_path('app/input.mp4'),
+        storage_path('app/temp/output.mp4')
+    );
 
 // Step 2: Upload to S3 after encoding succeeds
 if ($result->successful()) {
@@ -57,11 +71,17 @@ if ($result->successful()) {
 }
 
 // Example 5: With CRF optimization
-$optimalCrf = AV1::findCrf('input.mp4', targetVmaf: 95);
+$optimalCrf = AV1::findCrf(
+    storage_path('app/input.mp4'),
+    targetVmaf: 95
+);
 
 AV1::encoder()
     ->crf($optimalCrf)
-    ->encode('input.mp4', 'output.mp4')
+    ->encode(
+        storage_path('app/input.mp4'),
+        storage_path('app/output.mp4')
+    )
     ->export()
     ->toDisk('s3')
     ->save();
@@ -69,7 +89,10 @@ AV1::encoder()
 // Example 6: Check encoding status before exporting
 $result = AV1::encoder()
     ->crf(28)
-    ->encode('input.mp4', 'output.mp4');
+    ->encode(
+        storage_path('app/input.mp4'),
+        storage_path('app/output.mp4')
+    );
 
 if ($result->failed()) {
     Log::error('Encoding failed', [
@@ -85,14 +108,20 @@ if ($result->failed()) {
 // Example 7: Just get the encoded file path (no export)
 $result = AV1::encoder()
     ->crf(28)
-    ->encode('input.mp4', 'output.mp4');
+    ->encode(
+        storage_path('app/input.mp4'),
+        storage_path('app/output.mp4')
+    );
 
 $encodedPath = $result->path();
 // Do something with the local file
 
 // Example 8: Directory as target path
 AV1::encoder()
-    ->encode('input.mp4', 'output.mp4')
+    ->encode(
+        storage_path('app/input.mp4'),
+        storage_path('app/output.mp4')
+    )
     ->export()
     ->toDisk('s3')
     ->toPath('videos/2024/january')  // Directory
@@ -100,8 +129,35 @@ AV1::encoder()
 
 // Example 9: Full path as target
 AV1::encoder()
-    ->encode('input.mp4', 'output.mp4')
+    ->encode(
+        storage_path('app/input.mp4'),
+        storage_path('app/output.mp4')
+    )
     ->export()
     ->toDisk('s3')
     ->toPath('videos/final-video.mp4')  // Full path with extension
     ->save();  // Saves to: videos/final-video.mp4
+
+// Example 10: Download from S3, encode locally, upload back
+$inputPath = storage_path('app/temp/input.mp4');
+$outputPath = storage_path('app/temp/output.mp4');
+
+// Download from S3
+file_put_contents($inputPath, Storage::disk('s3')->get('videos/source.mp4'));
+
+// Encode
+$result = AV1::encoder()
+    ->crf(28)
+    ->encode($inputPath, $outputPath);
+
+// Upload result
+if ($result->successful()) {
+    $result->export()
+        ->toDisk('s3')
+        ->toPath('videos/encoded')
+        ->save();
+
+    // Clean up temp files
+    unlink($inputPath);
+    unlink($outputPath);
+}
