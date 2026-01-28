@@ -5,12 +5,33 @@ declare(strict_types=1);
 namespace Foxws\AV1\Filesystem;
 
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Traits\ForwardsCalls;
 
 /**
  * Simplified disk wrapper for media files
+ *
+ * @method bool has(string $path)
+ * @method bool exists(string $path)
+ * @method string|null get(string $path)
+ * @method bool put(string $path, string|resource $contents, mixed $options = [])
+ * @method resource|null readStream(string $path)
+ * @method bool writeStream(string $path, resource $resource, array $options = [])
+ * @method bool delete(string|array $paths)
+ * @method bool copy(string $from, string $to)
+ * @method bool move(string $from, string $to)
+ * @method int size(string $path)
+ * @method int lastModified(string $path)
+ * @method array files(string|null $directory = null, bool $recursive = false)
+ * @method array allFiles(string|null $directory = null)
+ * @method array directories(string|null $directory = null, bool $recursive = false)
+ * @method array allDirectories(string|null $directory = null)
+ * @method bool makeDirectory(string $path)
+ * @method bool deleteDirectory(string $directory)
  */
 class Disk
 {
+    use ForwardsCalls;
+
     protected string $name;
 
     public function __construct(string $name)
@@ -23,11 +44,9 @@ class Disk
      */
     public function getPath(string $path): string
     {
-        $storage = Storage::disk($this->name);
-
         // Try to get local path, fallback to download for remote disks
         try {
-            $localPath = $storage->path($path);
+            $localPath = $this->path($path);
 
             // Verify it's actually a local file
             if (file_exists($localPath)) {
@@ -54,7 +73,7 @@ class Disk
         }
 
         // Use streaming for memory efficiency with large video files
-        $stream = Storage::disk($this->name)->readStream($path);
+        $stream = $this->readStream($path);
 
         if (! $stream) {
             throw new \RuntimeException("Failed to read stream for: {$path}");
@@ -82,22 +101,6 @@ class Disk
     }
 
     /**
-     * Put file to disk
-     */
-    public function put(string $path, string $contents, string $visibility = 'private'): bool
-    {
-        return Storage::disk($this->name)->put($path, $contents, $visibility);
-    }
-
-    /**
-     * Check if file exists
-     */
-    public function exists(string $path): bool
-    {
-        return Storage::disk($this->name)->exists($path);
-    }
-
-    /**
      * Get disk name
      */
     public function getName(): string
@@ -111,5 +114,13 @@ class Disk
     public function storage(): \Illuminate\Contracts\Filesystem\Filesystem
     {
         return Storage::disk($this->name);
+    }
+
+    /**
+     * Forward calls to the underlying Storage instance
+     */
+    public function __call(string $method, array $parameters): mixed
+    {
+        return $this->forwardCallTo($this->storage(), $method, $parameters);
     }
 }
