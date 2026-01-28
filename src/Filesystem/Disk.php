@@ -42,7 +42,7 @@ class Disk
     }
 
     /**
-     * Download file to temporary location
+     * Download file to temporary location using streaming for memory efficiency
      */
     protected function downloadToTemp(string $path): string
     {
@@ -53,7 +53,30 @@ class Disk
             mkdir($tempDir, 0755, true);
         }
 
-        file_put_contents($tempPath, Storage::disk($this->name)->get($path));
+        // Use streaming for memory efficiency with large video files
+        $stream = Storage::disk($this->name)->readStream($path);
+
+        if (! $stream) {
+            throw new \RuntimeException("Failed to read stream for: {$path}");
+        }
+
+        $localStream = fopen($tempPath, 'wb');
+
+        if (! $localStream) {
+            if (is_resource($stream)) {
+                fclose($stream);
+            }
+            throw new \RuntimeException("Failed to create local file: {$tempPath}");
+        }
+
+        // Stream copy in chunks for memory efficiency
+        stream_copy_to_stream($stream, $localStream);
+
+        fclose($localStream);
+
+        if (is_resource($stream)) {
+            fclose($stream);
+        }
 
         return $tempPath;
     }
