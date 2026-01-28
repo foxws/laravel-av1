@@ -45,9 +45,9 @@ class VideoEncoder
         ?LoggerInterface $logger = null,
         ?array $config = null
     ) {
-        $this->config = $config ?? config('av1.ffmpeg', []);
+        $this->config = $config ?? [];
         $this->logger = $logger;
-        $this->ffmpegPath = $this->config['binaries']['ffmpeg'] ?? config('av1.binaries.ffmpeg', 'ffmpeg');
+        $this->ffmpegPath = $this->config['binaries']['ffmpeg'] ?? 'ffmpeg';
         $this->timeout = $this->config['timeout'] ?? 7200;
         $this->hardwareDetector = new HardwareDetector($this->ffmpegPath);
     }

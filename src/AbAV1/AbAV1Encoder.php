@@ -9,7 +9,6 @@ use Foxws\AV1\Filesystem\TemporaryDirectories;
 use Foxws\AV1\Support\CommandBuilder;
 use Illuminate\Process\Factory as ProcessFactory;
 use Illuminate\Process\ProcessResult;
-use Illuminate\Support\Facades\Config;
 use Psr\Log\LoggerInterface;
 
 class AbAV1Encoder implements EncoderInterface
@@ -20,13 +19,18 @@ class AbAV1Encoder implements EncoderInterface
 
     protected ?int $timeout;
 
+    protected array $config;
+
     public function __construct(
         ?LoggerInterface $logger = null,
-        ?int $timeout = null
+        ?string $binaryPath = null,
+        ?int $timeout = null,
+        ?array $config = null
     ) {
-        $this->binaryPath = Config::string('av1.binaries.ab-av1', 'ab-av1');
+        $this->binaryPath = $binaryPath ?? 'ab-av1';
         $this->logger = $logger;
-        $this->timeout = $timeout ?? Config::integer('av1.ab-av1.timeout', 3600);
+        $this->timeout = $timeout ?? 3600;
+        $this->config = $config ?? [];
     }
 
     public static function create(
@@ -159,18 +163,16 @@ class AbAV1Encoder implements EncoderInterface
         $builder->command('auto-encode');
 
         // Apply default configuration values
-        $abAv1Config = Config::get('av1.ab-av1', []);
-
-        if (isset($abAv1Config['preset'])) {
-            $builder->preset((string) $abAv1Config['preset']);
+        if (isset($this->config['preset'])) {
+            $builder->preset((string) $this->config['preset']);
         }
 
-        if (isset($abAv1Config['min_vmaf'])) {
-            $builder->minVmaf($abAv1Config['min_vmaf']);
+        if (isset($this->config['min_vmaf'])) {
+            $builder->minVmaf($this->config['min_vmaf']);
         }
 
-        if (isset($abAv1Config['max_encoded_percent'])) {
-            $builder->maxEncodedPercent($abAv1Config['max_encoded_percent']);
+        if (isset($this->config['max_encoded_percent'])) {
+            $builder->maxEncodedPercent($this->config['max_encoded_percent']);
         }
 
         return $this;
@@ -184,18 +186,16 @@ class AbAV1Encoder implements EncoderInterface
         $builder->command('crf-search');
 
         // Apply default configuration values
-        $abAv1Config = Config::get('av1.ab-av1', []);
-
-        if (isset($abAv1Config['preset'])) {
-            $builder->preset((string) $abAv1Config['preset']);
+        if (isset($this->config['preset'])) {
+            $builder->preset((string) $this->config['preset']);
         }
 
-        if (isset($abAv1Config['min_vmaf'])) {
-            $builder->minVmaf($abAv1Config['min_vmaf']);
+        if (isset($this->config['min_vmaf'])) {
+            $builder->minVmaf($this->config['min_vmaf']);
         }
 
-        if (isset($abAv1Config['max_encoded_percent'])) {
-            $builder->maxEncodedPercent($abAv1Config['max_encoded_percent']);
+        if (isset($this->config['max_encoded_percent'])) {
+            $builder->maxEncodedPercent($this->config['max_encoded_percent']);
         }
 
         return $this;

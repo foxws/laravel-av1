@@ -53,7 +53,9 @@ class AV1ServiceProvider extends PackageServiceProvider
 
             return new AbAV1Encoder(
                 logger: $logger,
-                timeout: $config['ab-av1']['timeout'] ?? 14400
+                binaryPath: $config['binaries']['ab-av1'] ?? 'ab-av1',
+                timeout: $config['ab-av1']['timeout'] ?? 3600,
+                config: $config['ab-av1'] ?? []
             );
         });
 
@@ -63,7 +65,9 @@ class AV1ServiceProvider extends PackageServiceProvider
 
             return new CrfFinder(
                 logger: $logger,
-                timeout: $config['ab-av1']['timeout'] ?? 14400
+                binaryPath: $config['binaries']['ab-av1'] ?? 'ab-av1',
+                timeout: $config['ab-av1']['timeout'] ?? 14400,
+                defaultCrf: $config['ffmpeg']['default_crf'] ?? 30
             );
         });
 

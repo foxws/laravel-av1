@@ -6,7 +6,6 @@ namespace Foxws\AV1\AbAV1;
 
 use Illuminate\Process\Factory as ProcessFactory;
 use Illuminate\Process\ProcessResult;
-use Illuminate\Support\Facades\Config;
 use Psr\Log\LoggerInterface;
 
 /**
@@ -20,13 +19,18 @@ class CrfFinder
 
     protected ?int $timeout;
 
+    protected int $defaultCrf;
+
     public function __construct(
         ?LoggerInterface $logger = null,
-        ?int $timeout = null
+        ?string $binaryPath = null,
+        ?int $timeout = null,
+        ?int $defaultCrf = null
     ) {
-        $this->binaryPath = Config::string('av1.binaries.ab-av1', 'ab-av1');
+        $this->binaryPath = $binaryPath ?? 'ab-av1';
         $this->logger = $logger;
-        $this->timeout = $timeout ?? Config::integer('av1.ab-av1.timeout', 14400);
+        $this->timeout = $timeout ?? 14400;
+        $this->defaultCrf = $defaultCrf ?? 30;
     }
 
     /**
@@ -63,7 +67,7 @@ class CrfFinder
         $result = $this->execute($args);
 
         if (! $result->successful()) {
-            return Config::integer('av1.ffmpeg.default_crf', 30);
+            return $this->defaultCrf;
         }
 
         return $this->parseCrfFromOutput($result->output());
@@ -109,6 +113,6 @@ class CrfFinder
             }
         }
 
-        return Config::integer('av1.ffmpeg.default_crf', 30);
+        return $this->defaultCrf;
     }
 }
