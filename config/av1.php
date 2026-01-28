@@ -80,6 +80,7 @@ return [
         'encoder' => env('FFMPEG_ENCODER', null), // null = auto-detect
         'hardware_acceleration' => env('FFMPEG_HARDWARE_ACCEL', true),
         'hwaccel_priority' => ['qsv', 'cuda', 'vaapi', 'vulkan'], // Priority order for hardware acceleration methods
+        'hwaccel_device' => env('FFMPEG_HWACCEL_DEVICE', null), // Hardware device path (e.g., /dev/dri/renderD128 for VAAPI, null = auto-detect)
         'encoder_priority' => [
             // Hardware encoders (lower index = higher priority)
             'av1_qsv',      // Intel Quick Sync Video

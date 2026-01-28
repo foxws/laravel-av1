@@ -13,6 +13,8 @@ class FFmpegCommandBuilder
 
     protected ?string $hwaccelMethod = null;
 
+    protected ?string $hwaccelDevice = null;
+
     protected string $encoder = 'libsvtav1';
 
     protected string $audioCodec = 'libopus';
@@ -42,6 +44,13 @@ class FFmpegCommandBuilder
     public function withHwaccel(?string $method): self
     {
         $this->hwaccelMethod = $method;
+
+        return $this;
+    }
+
+    public function withHwaccelDevice(?string $device): self
+    {
+        $this->hwaccelDevice = $device;
 
         return $this;
     }
@@ -113,6 +122,12 @@ class FFmpegCommandBuilder
         if ($this->hwaccelMethod) {
             $args[] = '-hwaccel';
             $args[] = $this->hwaccelMethod;
+
+            // Add hardware device if specified
+            if ($this->hwaccelDevice) {
+                $args[] = '-hwaccel_device';
+                $args[] = $this->hwaccelDevice;
+            }
         }
 
         // Input

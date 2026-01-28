@@ -188,6 +188,13 @@ class VideoEncoder
 
             if ($hwaccelMethod) {
                 $builder->withHwaccel($hwaccelMethod);
+
+                // Add hardware device if configured
+                $hwaccelDevice = $this->config['hwaccel_device'] ?? null;
+
+                if ($hwaccelDevice) {
+                    $builder->withHwaccelDevice($hwaccelDevice);
+                }
             }
         }
 
