@@ -10,6 +10,7 @@ use Foxws\AV1\Filesystem\MediaCollection;
 use Foxws\AV1\Filesystem\TemporaryDirectories;
 use Foxws\AV1\Support\AbAV1Encoder;
 use Foxws\AV1\Support\Encoder;
+use Foxws\AV1\Support\FFmpegEncoder;
 use Illuminate\Contracts\Filesystem\Filesystem;
 use Illuminate\Filesystem\FilesystemManager;
 use Illuminate\Http\UploadedFile;
@@ -139,6 +140,116 @@ class MediaOpener
     }
 
     /**
+     * Switch to FFmpeg encoder
+     */
+    public function ffmpeg(): self
+    {
+        $ffmpegEncoder = app(FFmpegEncoder::class);
+
+        // Apply default FFmpeg configuration
+        $ffmpegConfig = $this->config['ffmpeg'] ?? [];
+
+        if (isset($ffmpegConfig['encoder'])) {
+            $ffmpegEncoder->setEncoder($ffmpegConfig['encoder']);
+        }
+
+        if (isset($ffmpegConfig['hardware_acceleration'])) {
+            $ffmpegEncoder->useHardwareAcceleration($ffmpegConfig['hardware_acceleration']);
+        }
+
+        $this->encoder->setEncoder($ffmpegEncoder);
+
+        return $this;
+    }
+
+    /**
+     * Use FFmpeg with hardware acceleration
+     */
+    public function useHardwareAcceleration(bool $enabled = true): self
+    {
+        $encoder = $this->encoder->getEncoder();
+
+        if ($encoder instanceof FFmpegEncoder) {
+            $encoder->useHardwareAcceleration($enabled);
+        } else {
+            // Switch to FFmpeg encoder if not already using it
+            $this->ffmpeg();
+            $ffmpegEncoder = $this->encoder->getEncoder();
+            if ($ffmpegEncoder instanceof FFmpegEncoder) {
+                $ffmpegEncoder->useHardwareAcceleration($enabled);
+            }
+        }
+
+        return $this;
+    }
+
+    /**
+     * Enable automatic CRF optimization using ab-av1
+     */
+    public function withAutoCrf(bool $enabled = true): self
+    {
+        $this->encoder->builder()->autoCrf($enabled);
+
+        return $this;
+    }
+
+    /**
+     * FFmpeg encode with optional auto CRF
+     */
+    public function ffmpegEncode(): self
+    {
+        // Switch to FFmpeg encoder if not already
+        $encoder = $this->encoder->getEncoder();
+        if (! $encoder instanceof FFmpegEncoder) {
+            $this->ffmpeg();
+        }
+
+        // Apply default FFmpeg configuration
+        $ffmpegConfig = $this->config['ffmpeg'] ?? [];
+
+        if (isset($ffmpegConfig['default_crf']) && ! $this->encoder->builder()->getOptions()['crf'] ?? null) {
+            $this->encoder->builder()->crf($ffmpegConfig['default_crf']);
+        }
+
+        if (isset($ffmpegConfig['default_preset'])) {
+            $this->encoder->builder()->preset((string) $ffmpegConfig['default_preset']);
+        }
+
+        if (isset($ffmpegConfig['pixel_format'])) {
+            $this->encoder->builder()->pixFmt($ffmpegConfig['pixel_format']);
+        }
+
+        if (isset($ffmpegConfig['audio_codec'])) {
+            $this->encoder->builder()->audioCodec($ffmpegConfig['audio_codec']);
+        }
+
+        // Enable auto CRF if configured
+        if (($ffmpegConfig['auto_crf'] ?? false) && ! isset($this->encoder->builder()->getOptions()['crf'])) {
+            $this->encoder->builder()->autoCrf(true);
+        }
+
+        return $this;
+    }
+
+    /**
+     * FFmpeg encode with auto CRF optimization
+     */
+    public function ffmpegAutoEncode(): self
+    {
+        $this->ffmpegEncode();
+        $this->encoder->builder()->autoCrf(true);
+
+        // Set target VMAF if not already set
+        $options = $this->encoder->builder()->getOptions();
+        if (! isset($options['target_vmaf']) && ! isset($options['min-vmaf'])) {
+            $targetVmaf = $this->config['ab-av1']['min_vmaf'] ?? 95;
+            $this->encoder->builder()->targetVmaf($targetVmaf);
+        }
+
+        return $this;
+    }
+
+    /**
      * Returns an instance of MediaExporter with the encoder.
      */
     public function export(): Exporters\MediaExporter
@@ -149,100 +260,6 @@ class MediaOpener
     public function cleanupTemporaryFiles(): self
     {
         app(TemporaryDirectories::class)->deleteAll();
-
-        return $this;
-    }
-
-    /**
-     * Chainable methods for ab-av1 commands
-     */
-
-    /**
-     * Set command to auto-encode with defaults from configuration
-     */
-    public function vmafEncode(): self
-    {
-        $this->encoder->builder()->command('auto-encode');
-
-        // Apply default configuration values
-        $abAv1Config = $this->config['ab-av1'] ?? [];
-
-        if (isset($abAv1Config['preset'])) {
-            $this->encoder->builder()->preset((string) $abAv1Config['preset']);
-        }
-
-        if (isset($abAv1Config['min_vmaf'])) {
-            $this->encoder->builder()->minVmaf($abAv1Config['min_vmaf']);
-        }
-
-        if (isset($abAv1Config['max_encoded_percent'])) {
-            $this->encoder->builder()->maxEncodedPercent($abAv1Config['max_encoded_percent']);
-        }
-
-        return $this;
-    }
-
-    /**
-     * Set command to crf-search with defaults from configuration
-     */
-    public function crfSearch(): self
-    {
-        $this->encoder->builder()->command('crf-search');
-
-        // Apply default configuration values
-        $abAv1Config = $this->config['ab-av1'] ?? [];
-
-        if (isset($abAv1Config['preset'])) {
-            $this->encoder->builder()->preset((string) $abAv1Config['preset']);
-        }
-
-        if (isset($abAv1Config['min_vmaf'])) {
-            $this->encoder->builder()->minVmaf($abAv1Config['min_vmaf']);
-        }
-
-        if (isset($abAv1Config['max_encoded_percent'])) {
-            $this->encoder->builder()->maxEncodedPercent($abAv1Config['max_encoded_percent']);
-        }
-
-        return $this;
-    }
-
-    /**
-     * Set command to sample-encode
-     */
-    public function sampleEncode(): self
-    {
-        $this->encoder->builder()->command('sample-encode');
-
-        return $this;
-    }
-
-    /**
-     * Set command to encode
-     */
-    public function encode(): self
-    {
-        $this->encoder->builder()->command('encode');
-
-        return $this;
-    }
-
-    /**
-     * Set command to vmaf
-     */
-    public function vmaf(): self
-    {
-        $this->encoder->builder()->command('vmaf');
-
-        return $this;
-    }
-
-    /**
-     * Set command to xpsnr
-     */
-    public function xpsnr(): self
-    {
-        $this->encoder->builder()->command('xpsnr');
 
         return $this;
     }
@@ -266,152 +283,25 @@ class MediaOpener
     }
 
     /**
-     * Set output file
-     */
-    public function output(string $path): self
-    {
-        $this->encoder->builder()->output($path);
-
-        return $this;
-    }
-
-    /**
-     * Set reference file (for vmaf/xpsnr)
-     */
-    public function reference(string $path): self
-    {
-        $this->encoder->builder()->reference($path);
-
-        return $this;
-    }
-
-    /**
-     * Set distorted file (for vmaf/xpsnr)
-     */
-    public function distorted(string $path): self
-    {
-        $this->encoder->builder()->distorted($path);
-
-        return $this;
-    }
-
-    /**
-     * Set encoder preset
-     */
-    public function preset(string $preset): self
-    {
-        $this->encoder->builder()->preset($preset);
-
-        return $this;
-    }
-
-    /**
-     * Set minimum VMAF score
-     */
-    public function minVmaf(float|int $vmaf): self
-    {
-        $this->encoder->builder()->minVmaf($vmaf);
-
-        return $this;
-    }
-
-    /**
-     * Set CRF value
-     */
-    public function crf(int $crf): self
-    {
-        $this->encoder->builder()->crf($crf);
-
-        return $this;
-    }
-
-    /**
-     * Set maximum encoded file size percent
-     */
-    public function maxEncodedPercent(int $percent): self
-    {
-        $this->encoder->builder()->maxEncodedPercent($percent);
-
-        return $this;
-    }
-
-    /**
-     * Set minimum CRF value for searching
-     */
-    public function minCrf(int $crf): self
-    {
-        $this->encoder->builder()->minCrf($crf);
-
-        return $this;
-    }
-
-    /**
-     * Set maximum CRF value for searching
-     */
-    public function maxCrf(int $crf): self
-    {
-        $this->encoder->builder()->maxCrf($crf);
-
-        return $this;
-    }
-
-    /**
-     * Set sample duration in seconds
-     */
-    public function sample(int $seconds): self
-    {
-        $this->encoder->builder()->sample($seconds);
-
-        return $this;
-    }
-
-    /**
-     * Set VMAF model path
-     */
-    public function vmafModel(string $path): self
-    {
-        $this->encoder->builder()->vmafModel($path);
-
-        return $this;
-    }
-
-    /**
-     * Enable full VMAF calculation
-     */
-    public function fullVmaf(bool $enabled = true): self
-    {
-        $this->encoder->builder()->fullVmaf($enabled);
-
-        return $this;
-    }
-
-    /**
-     * Set pixel format
-     */
-    public function pixFmt(string $format): self
-    {
-        $this->encoder->builder()->pixFmt($format);
-
-        return $this;
-    }
-
-    /**
-     * Set verbose output
-     */
-    public function verbose(bool $enabled = true): self
-    {
-        $this->encoder->builder()->verbose($enabled);
-
-        return $this;
-    }
-
-    /**
-     * Forward other calls to encoder and return $this if the result is the encoder,
-     * allowing for method chaining.
+     * Forward calls to the encoder's builder for direct option access,
+     * or to the encoder itself for encoder-specific methods.
+     * Returns $this to maintain fluent chaining.
      */
     public function __call($method, $arguments)
     {
-        $result = $this->forwardCallTo($encoder = $this->getEncoder(), $method, $arguments);
+        $encoder = $this->getEncoder();
+        $actualEncoder = $encoder->getEncoder();
+
+        // Check if the method exists on the actual encoder (AbAV1Encoder, FFmpegEncoder)
+        if (method_exists($actualEncoder, $method)) {
+            // Pass the builder as the first argument for encoder methods
+            $actualEncoder->$method($encoder->builder(), ...$arguments);
+
+            return $this;
+        }
+
+        // Otherwise try the encoder wrapper
+        $result = $this->forwardCallTo($encoder, $method, $arguments);
 
         return ($result === $encoder) ? $this : $result;
     }

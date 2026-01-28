@@ -4,19 +4,28 @@
 [![Tests](https://img.shields.io/github/actions/workflow/status/foxws/laravel-av1/run-tests.yml?branch=main&label=tests&style=flat-square)](https://github.com/foxws/laravel-av1/actions/workflows/run-tests.yml)
 [![Total Downloads](https://img.shields.io/packagist/dt/foxws/laravel-av1.svg?style=flat-square)](https://packagist.org/packages/foxws/laravel-av1)
 
-A Laravel package for [ab-av1](https://github.com/alexheretic/ab-av1), enabling you to encode videos to AV1 format with VMAF-targeted quality optimization.
+A Laravel package for AV1 video encoding with support for [ab-av1](https://github.com/alexheretic/ab-av1) VMAF-targeted quality optimization and direct FFmpeg encoding with hardware acceleration (Intel QSV, AMD AMF, NVIDIA NVENC).
 
 ```php
 use Foxws\AV1\Facades\AV1;
 
-// VMAF-targeted encoding
+// FFmpeg encoding with hardware acceleration
 $result = AV1::open('videos/input.mp4')
-    ->abav1() // Use ab-av1 encoder
+    ->ffmpegEncode()
+    ->useHardwareAcceleration()
+    ->crf(28)
+    ->preset('6')
+    ->export()
+    ->toDisk('s3')
+    ->save('output.mp4');
+
+// Or use ab-av1 for VMAF-targeted encoding
+$result = AV1::open('videos/input.mp4')
+    ->abav1()
     ->vmafEncode()
     ->preset('6')
     ->minVmaf(95)
     ->export()
-    ->toDisk('s3')
     ->save('output.mp4');
 ```
 
@@ -24,9 +33,11 @@ $result = AV1::open('videos/input.mp4')
 
 - 🎬 **Fluent API** - Laravel-style chainable methods
 - 📁 **Multiple Disks** - Works with local, S3, and custom filesystems
-- 🎯 **VMAF-Targeted Encoding** - Automatically finds optimal CRF for target quality
+- 🎯 **VMAF-Targeted Encoding** - Automatically finds optimal CRF for target quality using ab-av1
+- ⚡ **Hardware Acceleration** - GPU encoding support (Intel QSV, AMD AMF, NVIDIA NVENC)
+- 🔄 **Multiple Encoders** - Support for ab-av1 and FFmpeg with auto-detection
 - 📊 **Quality Metrics** - Built-in VMAF & XPSNR scoring
-- 🔄 **Multiple Encoders** - Designed to support ab-av1, av1an, svt-av1, and more
+- 🚀 **Auto CRF Optimization** - Use ab-av1 to find optimal CRF, then encode with FFmpeg GPU
 - 🧪 **Testable** - Clean architecture with mockable components
 - 📝 **Type-Safe** - Full PHP 8.4+ type declarations
 
@@ -34,7 +45,8 @@ $result = AV1::open('videos/input.mp4')
 
 - PHP 8.3 or higher
 - Laravel 11.x or higher
-- [ab-av1](https://github.com/alexheretic/ab-av1) binary installed on your system
+- FFmpeg with AV1 encoder support (libsvtav1 or hardware encoder)
+- Optional: [ab-av1](https://github.com/alexheretic/ab-av1) for VMAF-targeted quality optimization
 
 ## Installation
 
@@ -50,15 +62,32 @@ Publish the config file:
 php artisan vendor:publish --tag="av1-config"
 ```
 
-### Installing ab-av1
+### Installing ab-av1 (Optional)
 
-Install ab-av1 using cargo:
+ab-av1 is optional but recommended for VMAF-targeted quality optimization. Install using cargo:
 
 ```bash
 cargo install ab-av1
 ```
 
 Or download a prebuilt binary from the [releases page](https://github.com/alexheretic/ab-av1/releases).
+
+### Installing FFmpeg with AV1 Support
+
+FFmpeg is required for direct AV1 encoding. Ensure FFmpeg is compiled with AV1 encoder support:
+
+```bash
+# Check available AV1 encoders
+ffmpeg -encoders | grep av1
+
+# You should see one or more of:
+# - libsvtav1 (CPU encoding)
+# - av1_qsv (Intel Quick Sync)
+# - av1_amf (AMD)
+# - av1_nvenc (NVIDIA)
+```
+
+For hardware acceleration support, you'll need FFmpeg compiled with the appropriate hardware encoder for your GPU.
 
 ### Verify Installation
 
@@ -85,9 +114,41 @@ php artisan av1:info
 
 ## Quick Start
 
+### FFmpeg Hardware Encoding (Recommended)
+
+Encode videos using FFmpeg with automatic hardware acceleration detection:
+
+```php
+use Foxws\AV1\Facades\AV1;
+
+// Auto-detect and use GPU acceleration
+$result = AV1::open('input.mp4')
+    ->ffmpegEncode()
+    ->useHardwareAcceleration()
+    ->crf(28)
+    ->preset('6')
+    ->export()
+    ->save('output.mp4');
+```
+
+### FFmpeg with Auto CRF Optimization
+
+Combine ab-av1's CRF optimization with FFmpeg's GPU encoding:
+
+```php
+// Use ab-av1 to find optimal CRF, then encode with FFmpeg GPU
+$result = AV1::open('input.mp4')
+    ->ffmpegAutoEncode()
+    ->targetVmaf(95)
+    ->preset('6')
+    ->useHardwareAcceleration()
+    ->export()
+    ->save('output.mp4');
+```
+
 ### Using ab-av1 Encoder
 
-This package uses ab-av1 as its primary encoder. Select the encoder explicitly:
+Use ab-av1 for integrated VMAF-targeted encoding:
 
 ```php
 use Foxws\AV1\Facades\AV1;
@@ -119,7 +180,31 @@ $result = AV1::open('input.mp4')
     ->save('output.mp4');
 ```
 
-### CRF Search
+### Hardware Acceleration
+
+Check available hardware encoders and use the best available:
+
+```php
+use Foxws\AV1\Support\HardwareDetector;
+
+$detector = new HardwareDetector();
+
+// Check available encoders
+$encoders = $detector->getAvailableEncoders();
+// ['av1_qsv' => [...], 'libsvtav1' => [...]]
+
+// Check if hardware acceleration is available
+if ($detector->hasHardwareAcceleration()) {
+    $result = AV1::open('input.mp4')
+        ->ffmpegEncode()
+        ->useHardwareAcceleration()
+        ->crf(28)
+        ->export()
+        ->save('output.mp4');
+}
+```
+
+### CRF Search (ab-av1)
 
 Search for the optimal CRF value without encoding the full video:
 
@@ -136,7 +221,7 @@ $result = AV1::open('input.mp4')
 echo $result->getOutput();
 ```
 
-### Sample Encode
+### Sample Encode (ab-av1)
 
 Encode a sample of the video to test settings:
 
@@ -151,7 +236,7 @@ $result = AV1::open('input.mp4')
     ->save('sample.mp4');
 ```
 
-### Full Encode
+### Full Encode (ab-av1)
 
 Encode the entire video with a specific CRF:
 
@@ -195,6 +280,58 @@ $result = AV1::xpsnr()
 echo $result->getOutput(); // XPSNR score
 ```
 
+## FFmpeg Encoding
+
+### Basic FFmpeg Encoding
+
+```php
+// Simple FFmpeg encode
+$result = AV1::open('input.mp4')
+    ->ffmpegEncode()
+    ->crf(28)
+    ->preset('6')
+    ->export()
+    ->save('output.mp4');
+
+// With 10-bit color
+$result = AV1::open('input.mp4')
+    ->ffmpegEncode()
+    ->crf(28)
+    ->pixFmt('yuv420p10le')
+    ->export()
+    ->save('output.mp4');
+```
+
+### GPU Acceleration
+
+```php
+// Auto-detect and use best hardware encoder
+$result = AV1::open('input.mp4')
+    ->ffmpegEncode()
+    ->useHardwareAcceleration()
+    ->crf(28)
+    ->preset('6')
+    ->export()
+    ->save('output.mp4');
+```
+
+### Auto CRF with FFmpeg
+
+Combine ab-av1's CRF optimization with FFmpeg's GPU encoding:
+
+```php
+// Find optimal CRF with ab-av1, encode with FFmpeg GPU
+$result = AV1::open('input.mp4')
+    ->ffmpegAutoEncode()
+    ->targetVmaf(95)
+    ->preset('6')
+    ->useHardwareAcceleration()
+    ->export()
+    ->save('output.mp4');
+```
+
+For detailed FFmpeg examples including hardware-specific configurations, see [FFMPEG_ENCODING.md](FFMPEG_ENCODING.md).
+
 ## Working with Different Disks
 
 ### From S3
@@ -223,6 +360,19 @@ $result = AV1::open('local/input.mp4')
     ->toDisk('s3')
     ->toPath('videos/encoded')
     ->save('output.mp4');
+```
+
+### S3 with Hardware Encoding
+
+```php
+$result = AV1::fromDisk('s3')
+    ->open('videos/input.mp4')
+    ->ffmpegEncode()
+    ->useHardwareAcceleration()
+    ->crf(28)
+    ->export()
+    ->toDisk('s3')
+    ->save('encoded/output.mp4');
 ```
 
 ## Advanced Options
@@ -380,14 +530,58 @@ AV1::open('input.mp4')
 
 ### Environment Variables
 
-- `AB_AV1_BINARY_PATH` - Path to ab-av1 binary (default: 'ab-av1')
-- `FFMPEG_BINARY_PATH` - Path to ffmpeg binary with libsvtav1, libvmaf, libopus (default: 'ffmpeg')
-- `AB_AV1_LOG_CHANNEL` - Log channel to use (false to disable, null for default)
+**ab-av1 Configuration:**
+- `AB_AV1_BINARY_PATH` - Path to ab-av1 binary (default: '/usr/local/bin/ab-av1')
 - `AB_AV1_TIMEOUT` - Maximum time in seconds for encoding commands (default: 14400)
 - `AB_AV1_PRESET` - Default encoder preset 0-13 for svt-av1 (default: 6)
 - `AB_AV1_MIN_VMAF` - Minimum VMAF score to target (default: 80)
 - `AB_AV1_MAX_PERCENT` - Maximum encoded file size as percentage (default: 300)
+
+**FFmpeg Configuration:**
+- `FFMPEG_BINARY_PATH` - Path to ffmpeg binary (default: '/usr/local/bin/ffmpeg')
+- `FFMPEG_TIMEOUT` - Maximum time in seconds for FFmpeg encoding (default: 7200)
+- `FFMPEG_ENCODER` - Force specific encoder (null = auto-detect): av1_qsv, av1_amf, av1_nvenc, libsvtav1
+- `FFMPEG_HARDWARE_ACCEL` - Enable hardware acceleration (default: true)
+- `FFMPEG_DEFAULT_CRF` - Default CRF value (default: 30)
+- `FFMPEG_DEFAULT_PRESET` - Default preset (default: 6)
+- `FFMPEG_AUDIO_CODEC` - Default audio codec (default: 'libopus')
+- `FFMPEG_PIXEL_FORMAT` - Default pixel format (default: 'yuv420p')
+- `FFMPEG_AUTO_CRF` - Use ab-av1 for auto CRF by default (default: false)
+
+**General:**
+- `AB_AV1_LOG_CHANNEL` - Log channel to use (false to disable, null for default)
 - `AB_AV1_TEMPORARY_FILES_ROOT` - Directory for temporary files (default: storage/app/av1/temp)
+
+### Configuration File
+
+Publish and edit `config/av1.php` for more control:
+
+```php
+return [
+    'binaries' => [
+        'ab-av1' => env('AB_AV1_BINARY_PATH', '/usr/local/bin/ab-av1'),
+        'ffmpeg' => env('FFMPEG_BINARY_PATH', '/usr/local/bin/ffmpeg'),
+    ],
+
+    'ffmpeg' => [
+        'timeout' => env('FFMPEG_TIMEOUT', 7200),
+        'encoder' => env('FFMPEG_ENCODER', null),
+        'hardware_acceleration' => env('FFMPEG_HARDWARE_ACCEL', true),
+        'default_crf' => env('FFMPEG_DEFAULT_CRF', 30),
+        'default_preset' => env('FFMPEG_DEFAULT_PRESET', 6),
+        'audio_codec' => env('FFMPEG_AUDIO_CODEC', 'libopus'),
+        'pixel_format' => env('FFMPEG_PIXEL_FORMAT', 'yuv420p'),
+        'auto_crf' => env('FFMPEG_AUTO_CRF', false),
+    ],
+
+    'ab-av1' => [
+        'timeout' => env('AB_AV1_TIMEOUT', 14400),
+        'preset' => env('AB_AV1_PRESET', 6),
+        'min_vmaf' => env('AB_AV1_MIN_VMAF', 80),
+        'max_encoded_percent' => env('AB_AV1_MAX_PERCENT', 300),
+    ],
+];
+```
 
 ## Error Handling
 

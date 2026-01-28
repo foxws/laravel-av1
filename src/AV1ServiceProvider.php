@@ -66,6 +66,10 @@ class AV1ServiceProvider extends PackageServiceProvider
             );
         });
 
+        $this->app->singleton('laravel-av1', function ($app) {
+            return new AV1Manager($app->make('laravel-av1-logger'));
+        });
+
         $this->app->bind(MediaOpener::class, function ($app) {
             return new MediaOpener;
         });

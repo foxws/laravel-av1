@@ -149,4 +149,94 @@ class AbAV1Encoder implements EncoderInterface
     {
         return $this->version();
     }
+
+    /**
+     * Set command to auto-encode with defaults from configuration
+     */
+    public function vmafEncode(CommandBuilder $builder): self
+    {
+        $builder->command('auto-encode');
+
+        // Apply default configuration values
+        $abAv1Config = Config::get('av1.ab-av1', []);
+
+        if (isset($abAv1Config['preset'])) {
+            $builder->preset((string) $abAv1Config['preset']);
+        }
+
+        if (isset($abAv1Config['min_vmaf'])) {
+            $builder->minVmaf($abAv1Config['min_vmaf']);
+        }
+
+        if (isset($abAv1Config['max_encoded_percent'])) {
+            $builder->maxEncodedPercent($abAv1Config['max_encoded_percent']);
+        }
+
+        return $this;
+    }
+
+    /**
+     * Set command to crf-search with defaults from configuration
+     */
+    public function crfSearch(CommandBuilder $builder): self
+    {
+        $builder->command('crf-search');
+
+        // Apply default configuration values
+        $abAv1Config = Config::get('av1.ab-av1', []);
+
+        if (isset($abAv1Config['preset'])) {
+            $builder->preset((string) $abAv1Config['preset']);
+        }
+
+        if (isset($abAv1Config['min_vmaf'])) {
+            $builder->minVmaf($abAv1Config['min_vmaf']);
+        }
+
+        if (isset($abAv1Config['max_encoded_percent'])) {
+            $builder->maxEncodedPercent($abAv1Config['max_encoded_percent']);
+        }
+
+        return $this;
+    }
+
+    /**
+     * Set command to sample-encode
+     */
+    public function sampleEncode(CommandBuilder $builder): self
+    {
+        $builder->command('sample-encode');
+
+        return $this;
+    }
+
+    /**
+     * Set command to encode
+     */
+    public function encode(CommandBuilder $builder): self
+    {
+        $builder->command('encode');
+
+        return $this;
+    }
+
+    /**
+     * Set command to vmaf
+     */
+    public function vmaf(CommandBuilder $builder): self
+    {
+        $builder->command('vmaf');
+
+        return $this;
+    }
+
+    /**
+     * Set command to xpsnr
+     */
+    public function xpsnr(CommandBuilder $builder): self
+    {
+        $builder->command('xpsnr');
+
+        return $this;
+    }
 }

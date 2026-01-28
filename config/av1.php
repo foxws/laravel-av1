@@ -52,6 +52,36 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | FFmpeg Configuration
+    |--------------------------------------------------------------------------
+    |
+    | Configuration for direct FFmpeg AV1 encoding.
+    |
+    | timeout: Maximum time in seconds to wait for encoding (null for no timeout)
+    | encoder: Default encoder (auto-detect if null)
+    |   - Hardware: av1_qsv (Intel), av1_amf (AMD), av1_nvenc (NVIDIA)
+    |   - Software: libsvtav1, libaom-av1, librav1e
+    | hardware_acceleration: Enable hardware acceleration for decoding/encoding
+    | default_crf: Default CRF value (quality, lower = better, 23-35 recommended)
+    | default_preset: Default preset (0-13 for svt-av1, varies by encoder)
+    | audio_codec: Default audio codec (libopus recommended for AV1)
+    | pixel_format: Default pixel format (yuv420p or yuv420p10le for 10-bit)
+    | auto_crf: Use ab-av1 to automatically find best CRF before encoding
+    |
+    */
+    'ffmpeg' => [
+        'timeout' => env('FFMPEG_TIMEOUT', 7200), // 2 hours
+        'encoder' => env('FFMPEG_ENCODER', null), // null = auto-detect
+        'hardware_acceleration' => env('FFMPEG_HARDWARE_ACCEL', true),
+        'default_crf' => env('FFMPEG_DEFAULT_CRF', 30),
+        'default_preset' => env('FFMPEG_DEFAULT_PRESET', 6),
+        'audio_codec' => env('FFMPEG_AUDIO_CODEC', 'libopus'),
+        'pixel_format' => env('FFMPEG_PIXEL_FORMAT', 'yuv420p'),
+        'auto_crf' => env('FFMPEG_AUTO_CRF', false), // Use ab-av1 for CRF detection
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
     | Temporary Files Root
     |--------------------------------------------------------------------------
     |

@@ -144,6 +144,11 @@ class Encoder
      */
     public function run(): EncoderResult
     {
+        // Check if using FFmpeg encoder with auto CRF
+        if ($this->encoder instanceof FFmpegEncoder && $this->shouldUseAutoCrf()) {
+            return $this->runWithAutoCrf();
+        }
+
         // Get the desired output path from builder
         $desiredOutputPath = $this->builder->getOutput();
 
@@ -160,11 +165,126 @@ class Encoder
         // Update builder with temporary output path for encoding
         $this->builder->output($tempOutputPath);
 
+        // For FFmpeg encoder, use its encode method
+        if ($this->encoder instanceof FFmpegEncoder) {
+            return $this->runFFmpegEncode($tempOutputPath);
+        }
+
+        // For ab-av1 encoder, build arguments
         $arguments = $this->builder->buildArray();
 
         $processOutput = $this->encoder->run($arguments);
 
         return new EncoderResult($processOutput, $tempOutputPath);
+    }
+
+    /**
+     * Run FFmpeg encoding with builder options
+     */
+    protected function runFFmpegEncode(string $tempOutputPath): EncoderResult
+    {
+        $inputPath = $this->builder->getInput();
+        if (! $inputPath) {
+            throw new \InvalidArgumentException('Input file is required');
+        }
+
+        if (! $this->encoder instanceof FFmpegEncoder) {
+            throw new \RuntimeException('FFmpeg encoder required for this operation');
+        }
+
+        $options = $this->builder->getOptions();
+
+        // Add CRF if set
+        if (isset($options['crf'])) {
+            $options['crf'] = (int) $options['crf'];
+        }
+
+        // Add preset if set
+        if (isset($options['preset'])) {
+            $options['preset'] = (int) $options['preset'];
+        }
+
+        $processOutput = $this->encoder->encode($inputPath, $tempOutputPath, $options);
+
+        return new EncoderResult($processOutput, $tempOutputPath);
+    }
+
+    /**
+     * Run encoding with automatic CRF optimization
+     */
+    protected function runWithAutoCrf(): EncoderResult
+    {
+        $inputPath = $this->builder->getInput();
+        if (! $inputPath) {
+            throw new \InvalidArgumentException('Input file is required');
+        }
+
+        $options = $this->builder->getOptions();
+        $targetVmaf = $options['target_vmaf'] ?? $options['min-vmaf'] ?? 95;
+        $preset = $options['preset'] ?? 6;
+
+        if ($this->logger) {
+            $this->logger->info('Using auto CRF optimization', [
+                'input' => $inputPath,
+                'target_vmaf' => $targetVmaf,
+                'preset' => $preset,
+            ]);
+        }
+
+        // Find optimal CRF using ab-av1
+        $optimizer = new CrfOptimizer($this->logger);
+        $optimalCrf = $optimizer->findOptimalCrf(
+            $inputPath,
+            $targetVmaf,
+            $preset
+        );
+
+        // Update builder with optimal CRF
+        $this->builder->crf($optimalCrf);
+
+        if ($this->logger) {
+            $this->logger->info('Using optimal CRF for encoding', [
+                'crf' => $optimalCrf,
+            ]);
+        }
+
+        // Continue with regular FFmpeg encoding
+        $desiredOutputPath = $this->builder->getOutput();
+        $tempOutputPath = $this->resolveOutputPath($desiredOutputPath);
+
+        $tempDirectory = dirname($tempOutputPath);
+        if (! is_dir($tempDirectory)) {
+            mkdir($tempDirectory, 0755, true);
+        }
+
+        $this->builder->output($tempOutputPath);
+
+        return $this->runFFmpegEncode($tempOutputPath);
+    }
+
+    /**
+     * Check if auto CRF should be used
+     */
+    protected function shouldUseAutoCrf(): bool
+    {
+        $options = $this->builder->getOptions();
+
+        // Use auto CRF if explicitly enabled
+        if (isset($options['auto_crf']) && $options['auto_crf']) {
+            return true;
+        }
+
+        // Don't use auto CRF if CRF is already set
+        if (isset($options['crf'])) {
+            return false;
+        }
+
+        // Use auto CRF if target VMAF is set
+        if (isset($options['target_vmaf']) || isset($options['min-vmaf'])) {
+            return true;
+        }
+
+        return false;
     }
 
     /**

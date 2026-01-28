@@ -341,6 +341,76 @@ class CommandBuilder
         return $this;
     }
 
+    /**
+     * Set video codec (for FFmpeg)
+     */
+    public function videoCodec(string $codec): self
+    {
+        $this->options['video_codec'] = $codec;
+
+        return $this;
+    }
+
+    /**
+     * Set audio codec (for FFmpeg)
+     */
+    public function audioCodec(string $codec): self
+    {
+        $this->options['audio_codec'] = $codec;
+
+        return $this;
+    }
+
+    /**
+     * Set video filter (for FFmpeg)
+     */
+    public function videoFilter(string $filter): self
+    {
+        $this->options['vf'] = $filter;
+
+        return $this;
+    }
+
+    /**
+     * Set hardware acceleration (for FFmpeg)
+     */
+    public function hardwareAcceleration(bool $enabled = true): self
+    {
+        $this->options['hardware_acceleration'] = $enabled;
+
+        return $this;
+    }
+
+    /**
+     * Add custom FFmpeg arguments
+     */
+    public function customArgs(array $args): self
+    {
+        $this->options['custom_args'] = $args;
+
+        return $this;
+    }
+
+    /**
+     * Enable auto CRF detection using ab-av1
+     */
+    public function autoCrf(bool $enabled = true): self
+    {
+        $this->options['auto_crf'] = $enabled;
+
+        return $this;
+    }
+
+    /**
+     * Set target VMAF for auto CRF detection
+     */
+    public function targetVmaf(float|int $vmaf): self
+    {
+        $this->options['target_vmaf'] = $vmaf;
+
+        return $this;
+    }
+
     public function getCommand(): ?string
     {
         return $this->command;
