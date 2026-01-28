@@ -6,7 +6,6 @@ namespace Foxws\AV1\FFmpeg;
 
 use Illuminate\Process\Factory as ProcessFactory;
 use Illuminate\Process\ProcessResult;
-use Illuminate\Support\Facades\Config;
 use Psr\Log\LoggerInterface;
 
 /**
@@ -169,69 +168,38 @@ class VideoEncoder
     }
 
     /**
-     * Build FFmpeg command
+     * Build FFmpeg command using the command builder
      */
     protected function buildCommand(string $input, string $output): array
     {
-        $args = [$this->ffmpegPath];
+        $builder = FFmpegCommandBuilder::make($this->ffmpegPath)
+            ->withEncoder($this->getEncoder())
+            ->withAudioCodec($this->audioCodec ?? $this->config['audio_codec'] ?? 'libopus')
+            ->withCrf($this->crf ?? $this->config['default_crf'] ?? 30)
+            ->withPreset($this->preset ?? $this->config['default_preset'] ?? 6)
+            ->withThreads($this->threads ?? $this->config['threads'] ?? 0)
+            ->withCustomArgs($this->customArgs);
 
         // Hardware acceleration for decoding
         if ($this->useHwAccel) {
             $hwaccelMethod = $this->hardwareDetector->getHardwareAccelMethod();
+
             if ($hwaccelMethod) {
-                $args[] = '-hwaccel';
-                $args[] = $hwaccelMethod;
+                $builder->withHwaccel($hwaccelMethod);
             }
         }
 
-        // Input
-        $args[] = '-i';
-        $args[] = $input;
-
-        // Video codec
-        $args[] = '-c:v';
-        $args[] = $this->getEncoder();
-
-        // Audio codec
-        $args[] = '-c:a';
-        $args[] = $this->audioCodec ?? $this->config['audio_codec'] ?? 'libopus';
-
-        // CRF
-        $args[] = $this->getCrfOption();
-        $args[] = (string) ($this->crf ?? $this->config['default_crf'] ?? 30);
-
-        // Preset
-        $args[] = $this->getPresetOption();
-        $args[] = (string) ($this->preset ?? $this->config['default_preset'] ?? 6);
-
-        // Threads
-        $args[] = '-threads';
-        $args[] = (string) ($this->threads ?? $this->config['threads'] ?? 0);
-
         // Pixel format
         if ($this->pixelFormat || isset($this->config['pixel_format'])) {
-            $args[] = '-pix_fmt';
-            $args[] = $this->pixelFormat ?? $this->config['pixel_format'];
+            $builder->withPixelFormat($this->pixelFormat ?? $this->config['pixel_format']);
         }
 
         // Video filter
         if ($this->videoFilter) {
-            $args[] = '-vf';
-            $args[] = $this->videoFilter;
+            $builder->withVideoFilter($this->videoFilter);
         }
 
-        // Custom args
-        if (! empty($this->customArgs)) {
-            $args = array_merge($args, $this->customArgs);
-        }
-
-        // Overwrite
-        $args[] = '-y';
-
-        // Output
-        $args[] = $output;
-
-        return $args;
+        return $builder->build($input, $output);
     }
 
     /**
@@ -245,38 +213,13 @@ class VideoEncoder
 
         if ($this->useHwAccel) {
             $hwEncoder = $this->hardwareDetector->getBestHardwareEncoder();
+
             if ($hwEncoder) {
                 return $hwEncoder;
             }
         }
 
         return $this->hardwareDetector->getBestEncoder() ?? 'libsvtav1';
-    }
-
-    /**
-     * Get CRF option name for current encoder
-     */
-    protected function getCrfOption(): string
-    {
-        $encoder = $this->getEncoder();
-
-        return match ($encoder) {
-            'av1_qsv', 'av1_amf', 'av1_nvenc' => '-q:v',
-            default => '-crf',
-        };
-    }
-
-    /**
-     * Get preset option name for current encoder
-     */
-    protected function getPresetOption(): string
-    {
-        $encoder = $this->getEncoder();
-
-        return match ($encoder) {
-            'av1_amf' => '-quality',
-            default => '-preset',
-        };
     }
 
     /**
