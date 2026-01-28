@@ -50,5 +50,4 @@ class AV1Manager
     {
         return new CrfFinder($this->logger);
     }
-
 }
