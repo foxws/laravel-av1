@@ -8,7 +8,29 @@ use Foxws\AV1\Facades\AV1;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 
-// Example 1: Encode and export to S3
+// Example 1: Using fromDisk and toDisk (recommended)
+AV1::fromDisk('media')
+    ->path('videos/input.mp4')
+    ->encoder()
+    ->crf(28)
+    ->preset(6)
+    ->encode()
+    ->export()
+    ->toDisk('s3')
+    ->toPath('videos/encoded')
+    ->save('final.mp4');
+
+// Example 2: Simpler - source and target disks only
+AV1::fromDisk('media')
+    ->path('videos/input.mp4')
+    ->encoder()
+    ->crf(28)
+    ->encode()
+    ->export()
+    ->toDisk('transcodes')
+    ->save();
+
+// Example 3: Using direct file paths
 AV1::encoder()
     ->crf(28)
     ->preset(6)
@@ -22,7 +44,7 @@ AV1::encoder()
     ->toPath('videos/encoded')
     ->save('final-video.mp4');
 
-// Example 2: Encode locally, keep control
+// Example 4: Encode locally, keep control
 $result = AV1::encoder()
     ->crf(28)
     ->encode(
@@ -36,20 +58,19 @@ if ($result->successful()) {
     $result->export()->toDisk('local')->toPath('archive')->save();
 }
 
-// Example 3: Public file on CDN
+// Example 6: Public file on CDN using disks
 AV1::encoder()
     ->crf(30)
-    ->encode(
-        storage_path('app/input.mp4'),
-        storage_path('app/output.mp4')
-    )
+    ->fromDisk('uploads')
+    ->path('videos/source.mp4')
+    ->encode()
     ->export()
     ->toDisk('s3-public')
     ->toPath('videos/public')
     ->withVisibility('public')
     ->save('public-video.mp4');
 
-// Example 4: Local to S3 workflow (recommended for performance)
+// Example 7: Local filesystem to S3 workflow
 // Step 1: Encode locally for speed
 $result = AV1::encoder()
     ->crf(28)
@@ -70,23 +91,17 @@ if ($result->successful()) {
     unlink($result->path());
 }
 
-// Example 5: With CRF optimization
-$optimalCrf = AV1::findCrf(
-    storage_path('app/input.mp4'),
-    targetVmaf: 95
-);
-
+// Example 8: With CRF optimization and disks
 AV1::encoder()
-    ->crf($optimalCrf)
-    ->encode(
-        storage_path('app/input.mp4'),
-        storage_path('app/output.mp4')
-    )
+    ->fromDisk('media')
+    ->path('videos/input.mp4')
+    ->crf(AV1::findCrf(Storage::disk('media')->path('videos/input.mp4'), targetVmaf: 95))
+    ->encode()
     ->export()
     ->toDisk('s3')
     ->save();
 
-// Example 6: Check encoding status before exporting
+// Example 9: Check encoding status before exporting
 $result = AV1::encoder()
     ->crf(28)
     ->encode(
@@ -105,7 +120,7 @@ if ($result->failed()) {
         ->save();
 }
 
-// Example 7: Just get the encoded file path (no export)
+// Example 10: Just get the encoded file path (no export)
 $result = AV1::encoder()
     ->crf(28)
     ->encode(
@@ -116,48 +131,23 @@ $result = AV1::encoder()
 $encodedPath = $result->path();
 // Do something with the local file
 
-// Example 8: Directory as target path
+// Example 11: Directory as target path with disks
 AV1::encoder()
-    ->encode(
-        storage_path('app/input.mp4'),
-        storage_path('app/output.mp4')
-    )
+    ->fromDisk('uploads')
+    ->path('videos/input.mp4')
+    ->encode()
     ->export()
     ->toDisk('s3')
-    ->toPath('videos/2024/january')  // Directory
-    ->save();  // Uses original filename: videos/2024/january/output.mp4
+    ->toPath('videos/2024/january')
+    ->save();
 
-// Example 9: Full path as target
+// Example 12: Cross-disk encoding (S3 to local transcodes disk)
 AV1::encoder()
-    ->encode(
-        storage_path('app/input.mp4'),
-        storage_path('app/output.mp4')
-    )
-    ->export()
-    ->toDisk('s3')
-    ->toPath('videos/final-video.mp4')  // Full path with extension
-    ->save();  // Saves to: videos/final-video.mp4
-
-// Example 10: Download from S3, encode locally, upload back
-$inputPath = storage_path('app/temp/input.mp4');
-$outputPath = storage_path('app/temp/output.mp4');
-
-// Download from S3
-file_put_contents($inputPath, Storage::disk('s3')->get('videos/source.mp4'));
-
-// Encode
-$result = AV1::encoder()
     ->crf(28)
-    ->encode($inputPath, $outputPath);
-
-// Upload result
-if ($result->successful()) {
-    $result->export()
-        ->toDisk('s3')
-        ->toPath('videos/encoded')
-        ->save();
-
-    // Clean up temp files
-    unlink($inputPath);
-    unlink($outputPath);
-}
+    ->fromDisk('s3-originals')
+    ->path('raw-footage/video.mp4')
+    ->encode()
+    ->export()
+    ->toDisk('transcodes')
+    ->toPath('processed/2024')
+    ->save();
