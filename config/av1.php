@@ -58,10 +58,15 @@ return [
     | Configuration for direct FFmpeg AV1 encoding.
     |
     | timeout: Maximum time in seconds to wait for encoding (null for no timeout)
+    | threads: Number of threads to use (0 = auto-detect CPU cores)
     | encoder: Default encoder (auto-detect if null)
     |   - Hardware: av1_qsv (Intel), av1_amf (AMD), av1_nvenc (NVIDIA)
     |   - Software: libsvtav1, libaom-av1, librav1e
     | hardware_acceleration: Enable hardware acceleration for decoding/encoding
+    | hwaccel_priority: Priority order for hardware acceleration methods
+    |   - Available: qsv, cuda, vaapi, vulkan (lower index = higher priority)
+    | encoder_priority: Priority order for encoder selection
+    |   - Mix of hardware and software encoders (lower index = higher priority)
     | default_crf: Default CRF value (quality, lower = better, 23-35 recommended)
     | default_preset: Default preset (0-13 for svt-av1, varies by encoder)
     | audio_codec: Default audio codec (libopus recommended for AV1)
@@ -71,6 +76,7 @@ return [
     */
     'ffmpeg' => [
         'timeout' => env('FFMPEG_TIMEOUT', 7200), // 2 hours
+        'threads' => env('FFMPEG_THREADS', 0), // 0 = auto-detect CPU cores
         'encoder' => env('FFMPEG_ENCODER', null), // null = auto-detect
         'hardware_acceleration' => env('FFMPEG_HARDWARE_ACCEL', true),
         'hwaccel_priority' => ['qsv', 'cuda', 'vaapi', 'vulkan'], // Priority order for hardware acceleration methods

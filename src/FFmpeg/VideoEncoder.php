@@ -38,16 +38,19 @@ class VideoEncoder
 
     protected array $customArgs = [];
 
-    public function __construct(?LoggerInterface $logger = null)
-    {
-        $this->ffmpegPath = Config::string('av1.binaries.ffmpeg', 'ffmpeg');
+    protected int $threads;
+
+    protected array $config;
+
+    public function __construct(
+        ?LoggerInterface $logger = null,
+        ?array $config = null
+    ) {
+        $this->config = $config ?? config('av1.ffmpeg', []);
         $this->logger = $logger;
-        $this->timeout = Config::integer('av1.ffmpeg.timeout', 7200);
+        $this->ffmpegPath = $this->config['binaries']['ffmpeg'] ?? config('av1.binaries.ffmpeg', 'ffmpeg');
+        $this->timeout = $this->config['timeout'] ?? 7200;
         $this->hardwareDetector = new HardwareDetector($this->ffmpegPath);
-        $this->crf = Config::integer('av1.ffmpeg.default_crf', 30);
-        $this->preset = Config::integer('av1.ffmpeg.default_preset', 6);
-        $this->audioCodec = Config::string('av1.ffmpeg.audio_codec', 'libopus');
-        $this->pixelFormat = Config::string('av1.ffmpeg.pixel_format', 'yuv420p');
     }
 
     /**
@@ -76,6 +79,16 @@ class VideoEncoder
     public function preset(int $preset): self
     {
         $this->preset = $preset;
+
+        return $this;
+    }
+
+    /**
+     * Set number of threads (0 = auto)
+     */
+    public function threads(int $threads): self
+    {
+        $this->threads = $threads;
 
         return $this;
     }
@@ -142,7 +155,7 @@ class VideoEncoder
                 'input' => $inputPath,
                 'output' => $outputPath,
                 'encoder' => $this->getEncoder(),
-                'crf' => $this->crf,
+                'crf' => $this->crf ?? $this->config['default_crf'] ?? 30,
                 'hw_accel' => $this->useHwAccel,
             ]);
         }
@@ -181,20 +194,24 @@ class VideoEncoder
 
         // Audio codec
         $args[] = '-c:a';
-        $args[] = $this->audioCodec;
+        $args[] = $this->audioCodec ?? $this->config['audio_codec'] ?? 'libopus';
 
         // CRF
         $args[] = $this->getCrfOption();
-        $args[] = (string) $this->crf;
+        $args[] = (string) ($this->crf ?? $this->config['default_crf'] ?? 30);
 
         // Preset
         $args[] = $this->getPresetOption();
-        $args[] = (string) $this->preset;
+        $args[] = (string) ($this->preset ?? $this->config['default_preset'] ?? 6);
+
+        // Threads
+        $args[] = '-threads';
+        $args[] = (string) ($this->threads ?? $this->config['threads'] ?? 0);
 
         // Pixel format
-        if ($this->pixelFormat) {
+        if ($this->pixelFormat || isset($this->config['pixel_format'])) {
             $args[] = '-pix_fmt';
-            $args[] = $this->pixelFormat;
+            $args[] = $this->pixelFormat ?? $this->config['pixel_format'];
         }
 
         // Video filter

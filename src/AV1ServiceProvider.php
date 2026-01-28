@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Foxws\AV1;
 
 use Foxws\AV1\AbAV1\AbAV1Encoder;
+use Foxws\AV1\FFmpeg\VideoEncoder;
 use Foxws\AV1\Filesystem\TemporaryDirectories;
 use Foxws\AV1\Support\Encoder;
 use Illuminate\Support\Facades\Config;
@@ -63,6 +64,19 @@ class AV1ServiceProvider extends PackageServiceProvider
             return Encoder::create(
                 $logger,
                 $config
+            );
+        });
+
+        $this->app->bind(VideoEncoder::class, function ($app) {
+            $logger = $app->make('laravel-av1-logger');
+            $config = $app->make('laravel-av1-configuration');
+
+            return new VideoEncoder(
+                logger: $logger,
+                config: array_merge(
+                    ['binaries' => $config['binaries'] ?? []],
+                    $config['ffmpeg'] ?? []
+                )
             );
         });
 
