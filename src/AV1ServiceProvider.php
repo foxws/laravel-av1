@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Foxws\AV1;
 
 use Foxws\AV1\Filesystem\TemporaryDirectories;
-use Foxws\AV1\Support\AbAV1Encoder;
+use Foxws\AV1\AbAV1\AbAV1Encoder;
 use Foxws\AV1\Support\Encoder;
 use Illuminate\Support\Facades\Config;
 use Spatie\LaravelPackageTools\Package;

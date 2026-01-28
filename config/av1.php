@@ -73,6 +73,17 @@ return [
         'timeout' => env('FFMPEG_TIMEOUT', 7200), // 2 hours
         'encoder' => env('FFMPEG_ENCODER', null), // null = auto-detect
         'hardware_acceleration' => env('FFMPEG_HARDWARE_ACCEL', true),
+        'hwaccel_priority' => ['qsv', 'cuda', 'vaapi', 'vulkan'], // Priority order for hardware acceleration methods
+        'encoder_priority' => [
+            // Hardware encoders (lower index = higher priority)
+            'av1_qsv',      // Intel Quick Sync Video
+            'av1_nvenc',    // NVIDIA NVENC
+            'av1_amf',      // AMD AMF
+            // Software encoders
+            'libsvtav1',    // SVT-AV1 (fastest, best quality/speed balance)
+            'libaom-av1',   // AOM AV1 (reference implementation)
+            'librav1e',     // rav1e (Rust implementation)
+        ],
         'default_crf' => env('FFMPEG_DEFAULT_CRF', 30),
         'default_preset' => env('FFMPEG_DEFAULT_PRESET', 6),
         'audio_codec' => env('FFMPEG_AUDIO_CODEC', 'libopus'),

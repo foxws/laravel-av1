@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Foxws\AV1\Commands;
 
 use Foxws\AV1\Exceptions\ExecutableNotFoundException;
-use Foxws\AV1\Support\AbAV1Encoder;
+use Foxws\AV1\AbAV1\AbAV1Encoder;
 use Illuminate\Console\Command;
 
 use function Laravel\Prompts\error;

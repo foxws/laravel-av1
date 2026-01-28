@@ -2,10 +2,11 @@
 
 declare(strict_types=1);
 
-namespace Foxws\AV1\FFmpeg\HardwareAcceleration;
+namespace Foxws\AV1\FFmpeg;
 
-use Foxws\AV1\FFmpeg\HardwareAcceleration\Enums\HardwareEncoder;
-use Foxws\AV1\FFmpeg\HardwareAcceleration\Enums\SoftwareEncoder;
+use Foxws\AV1\FFmpeg\Enums\HardwareAccelMethod;
+use Foxws\AV1\FFmpeg\Enums\HardwareEncoder;
+use Foxws\AV1\FFmpeg\Enums\SoftwareEncoder;
 use Illuminate\Process\Factory as ProcessFactory;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Config;
@@ -34,14 +35,16 @@ class HardwareDetector
             $available = [];
 
             $encoders = $this->listFFmpegEncoders();
+            $priorityList = Config::get('av1.ffmpeg.encoder_priority', []);
 
             // Check hardware encoders
             foreach (HardwareEncoder::cases() as $encoder) {
                 if (in_array($encoder->value, $encoders)) {
+                    $priority = array_search($encoder->value, $priorityList);
                     $available[$encoder->value] = [
                         'name' => $encoder->label(),
                         'type' => 'hardware',
-                        'priority' => $encoder->priority(),
+                        'priority' => $priority !== false ? $priority : 999,
                     ];
                 }
             }
@@ -49,10 +52,11 @@ class HardwareDetector
             // Check software encoders
             foreach (SoftwareEncoder::cases() as $encoder) {
                 if (in_array($encoder->value, $encoders)) {
+                    $priority = array_search($encoder->value, $priorityList);
                     $available[$encoder->value] = [
                         'name' => $encoder->label(),
                         'type' => 'software',
-                        'priority' => $encoder->priority(),
+                        'priority' => $priority !== false ? $priority : 999,
                     ];
                 }
             }
@@ -156,14 +160,6 @@ class HardwareDetector
      */
     public function getHardwareAccelMethod(): ?string
     {
-        // Check for hardware acceleration methods
-        $methods = [
-            'qsv' => 'Intel Quick Sync',
-            'vaapi' => 'VA-API (Linux)',
-            'cuda' => 'NVIDIA CUDA',
-            'vulkan' => 'Vulkan',
-        ];
-
         try {
             $process = $this->processFactory
                 ->timeout(10)
@@ -175,9 +171,20 @@ class HardwareDetector
 
             $output = $process->output();
 
-            foreach ($methods as $method => $name) {
+            // Get priority order from config
+            $priorityOrder = Config::get('av1.ffmpeg.hwaccel_priority', ['qsv', 'cuda', 'vaapi', 'vulkan']);
+
+            // Check in priority order from config
+            foreach ($priorityOrder as $method) {
                 if (str_contains($output, $method)) {
                     return $method;
+                }
+            }
+
+            // Fallback: check any available method
+            foreach (HardwareAccelMethod::cases() as $method) {
+                if (str_contains($output, $method->value)) {
+                    return $method->value;
                 }
             }
         } catch (\Exception $e) {

@@ -15,6 +15,7 @@ echo "Optimal CRF: $crf";
 ## Encode Video
 
 ### Basic encoding
+
 ```php
 use Foxws\AV1\Facades\AV1;
 
@@ -23,6 +24,7 @@ $result = AV1::encode('input.mp4', 'output.mp4');
 ```
 
 ### With hardware acceleration
+
 ```php
 // Encode with GPU acceleration
 AV1::encode('input.mp4')
@@ -33,6 +35,7 @@ AV1::encode('input.mp4')
 ```
 
 ### Fluent API
+
 ```php
 $encoder = AV1::encoder()
     ->useHwAccel()
@@ -46,6 +49,7 @@ $result = $encoder->encode('input.mp4', 'output.mp4');
 ```
 
 ### With auto CRF
+
 ```php
 // Find CRF first, then encode
 $crf = AV1::findCrf('input.mp4', targetVmaf: 95);
@@ -57,6 +61,7 @@ $result = AV1::encoder()
 ```
 
 ### One-liner with auto CRF
+
 ```php
 $result = AV1::encoder()
     ->crf(AV1::findCrf('input.mp4', targetVmaf: 95))
@@ -67,7 +72,7 @@ $result = AV1::encoder()
 ## Check Hardware Support
 
 ```php
-use Foxws\AV1\FFmpeg\HardwareAcceleration\HardwareDetector;
+use Foxws\AV1\FFmpeg\HardwareDetector;
 
 $detector = new HardwareDetector();
 

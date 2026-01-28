@@ -185,7 +185,7 @@ $result = AV1::open('input.mp4')
 Check available hardware encoders and use the best available:
 
 ```php
-use Foxws\AV1\Support\HardwareDetector;
+use Foxws\AV1\FFmpeg\HardwareDetector;
 
 $detector = new HardwareDetector();
 
@@ -531,6 +531,7 @@ AV1::open('input.mp4')
 ### Environment Variables
 
 **ab-av1 Configuration:**
+
 - `AB_AV1_BINARY_PATH` - Path to ab-av1 binary (default: '/usr/local/bin/ab-av1')
 - `AB_AV1_TIMEOUT` - Maximum time in seconds for encoding commands (default: 14400)
 - `AB_AV1_PRESET` - Default encoder preset 0-13 for svt-av1 (default: 6)
@@ -538,6 +539,7 @@ AV1::open('input.mp4')
 - `AB_AV1_MAX_PERCENT` - Maximum encoded file size as percentage (default: 300)
 
 **FFmpeg Configuration:**
+
 - `FFMPEG_BINARY_PATH` - Path to ffmpeg binary (default: '/usr/local/bin/ffmpeg')
 - `FFMPEG_TIMEOUT` - Maximum time in seconds for FFmpeg encoding (default: 7200)
 - `FFMPEG_ENCODER` - Force specific encoder (null = auto-detect): av1_qsv, av1_amf, av1_nvenc, libsvtav1
@@ -549,6 +551,7 @@ AV1::open('input.mp4')
 - `FFMPEG_AUTO_CRF` - Use ab-av1 for auto CRF by default (default: false)
 
 **General:**
+
 - `AB_AV1_LOG_CHANNEL` - Log channel to use (false to disable, null for default)
 - `AB_AV1_TEMPORARY_FILES_ROOT` - Directory for temporary files (default: storage/app/av1/temp)
 
@@ -687,7 +690,6 @@ composer test
 ## Credits
 
 - [ab-av1](https://github.com/alexheretic/ab-av1) - The underlying encoding tool
-- [Laravel FFMpeg](https://github.com/pbmedia/laravel-ffmpeg) - Architecture inspiration
 
 ## License
 

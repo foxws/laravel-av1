@@ -5,6 +5,7 @@ This file contains examples of using FFmpeg for AV1 encoding with hardware accel
 ## Basic FFmpeg Encoding
 
 ### Simple FFmpeg encode with default settings
+
 ```php
 use Foxws\AV1\Facades\AV1;
 
@@ -15,6 +16,7 @@ $result = AV1::open('videos/input.mp4')
 ```
 
 ### FFmpeg encode with custom CRF and preset
+
 ```php
 $result = AV1::open('videos/input.mp4')
     ->ffmpegEncode()
@@ -27,6 +29,7 @@ $result = AV1::open('videos/input.mp4')
 ## Hardware Acceleration
 
 ### Auto-detect and use best available hardware encoder
+
 ```php
 $result = AV1::open('videos/input.mp4')
     ->ffmpegEncode()
@@ -37,6 +40,7 @@ $result = AV1::open('videos/input.mp4')
 ```
 
 ### Intel Quick Sync Video (QSV)
+
 ```php
 use Foxws\AV1\Facades\AV1;
 
@@ -52,6 +56,7 @@ $result = AV1::open('videos/input.mp4')
 ```
 
 ### AMD AMF
+
 ```php
 // AMD hardware encoding is automatically detected
 $result = AV1::open('videos/input.mp4')
@@ -65,6 +70,7 @@ $result = AV1::open('videos/input.mp4')
 ```
 
 ### NVIDIA NVENC
+
 ```php
 // NVIDIA hardware encoding is automatically detected
 $result = AV1::open('videos/input.mp4')
@@ -78,8 +84,9 @@ $result = AV1::open('videos/input.mp4')
 ```
 
 ### Check available encoders
+
 ```php
-use Foxws\AV1\Support\HardwareDetector;
+use Foxws\AV1\FFmpeg\HardwareDetector;
 
 $detector = new HardwareDetector();
 
@@ -115,6 +122,7 @@ $hwaccel = $detector->getHardwareAccelMethod();  // 'qsv'
 The package can use `ab-av1` to find the optimal CRF value for your target quality, then encode with FFmpeg using that CRF.
 
 ### Auto CRF with target VMAF
+
 ```php
 $result = AV1::open('videos/input.mp4')
     ->ffmpegAutoEncode()           // Enable auto CRF optimization
@@ -130,6 +138,7 @@ $result = AV1::open('videos/input.mp4')
 ```
 
 ### Manual auto CRF control
+
 ```php
 $result = AV1::open('videos/input.mp4')
     ->ffmpegEncode()
@@ -141,6 +150,7 @@ $result = AV1::open('videos/input.mp4')
 ```
 
 ### Skip auto CRF (use fixed CRF)
+
 ```php
 $result = AV1::open('videos/input.mp4')
     ->ffmpegEncode()
@@ -153,6 +163,7 @@ $result = AV1::open('videos/input.mp4')
 ## Advanced Encoding Options
 
 ### 10-bit encoding
+
 ```php
 $result = AV1::open('videos/input.mp4')
     ->ffmpegEncode()
@@ -164,6 +175,7 @@ $result = AV1::open('videos/input.mp4')
 ```
 
 ### Custom audio codec
+
 ```php
 $result = AV1::open('videos/input.mp4')
     ->ffmpegEncode()
@@ -174,6 +186,7 @@ $result = AV1::open('videos/input.mp4')
 ```
 
 ### Video filters
+
 ```php
 $result = AV1::open('videos/input.mp4')
     ->ffmpegEncode()
@@ -184,6 +197,7 @@ $result = AV1::open('videos/input.mp4')
 ```
 
 ### Custom FFmpeg arguments
+
 ```php
 $result = AV1::open('videos/input.mp4')
     ->ffmpegEncode()
@@ -196,6 +210,7 @@ $result = AV1::open('videos/input.mp4')
 ## Cloud Storage with Hardware Encoding
 
 ### Encode from S3 with hardware acceleration
+
 ```php
 $result = AV1::fromDisk('s3')
     ->open('videos/input.mp4')
@@ -209,6 +224,7 @@ $result = AV1::fromDisk('s3')
 ```
 
 ### Batch processing with hardware encoding
+
 ```php
 $videos = ['video1.mp4', 'video2.mp4', 'video3.mp4'];
 
@@ -229,6 +245,7 @@ AV1::fromDisk('s3')
 ## Comparison: ab-av1 vs FFmpeg
 
 ### ab-av1 with VMAF-targeted encoding
+
 ```php
 // Uses ab-av1's built-in VMAF optimization and encoding
 $result = AV1::open('input.mp4')
@@ -244,6 +261,7 @@ $result = AV1::open('input.mp4')
 ```
 
 ### FFmpeg with auto CRF (best of both worlds)
+
 ```php
 // Uses ab-av1 for CRF search, FFmpeg for encoding
 $result = AV1::open('input.mp4')
@@ -259,6 +277,7 @@ $result = AV1::open('input.mp4')
 ```
 
 ### Pure FFmpeg with fixed CRF
+
 ```php
 // Direct FFmpeg encoding with known CRF
 $result = AV1::open('input.mp4')
@@ -313,9 +332,9 @@ FFMPEG_AUTO_CRF=false
 1. **Hardware Acceleration**: Always enable when available for 3-10x faster encoding
 2. **Preset**: Use 6-8 for good balance of speed/quality
 3. **CRF**:
-   - 23-28: High quality
-   - 28-32: Balanced
-   - 32-35: Lower quality, smaller file
+    - 23-28: High quality
+    - 28-32: Balanced
+    - 32-35: Lower quality, smaller file
 4. **Auto CRF**: Use for consistent quality across different videos
 5. **Batch Processing**: Process multiple videos in parallel using Laravel queues
 

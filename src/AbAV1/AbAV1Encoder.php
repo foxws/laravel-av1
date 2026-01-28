@@ -2,10 +2,11 @@
 
 declare(strict_types=1);
 
-namespace Foxws\AV1\Support;
+namespace Foxws\AV1\AbAV1;
 
 use Foxws\AV1\Contracts\EncoderInterface;
 use Foxws\AV1\Filesystem\TemporaryDirectories;
+use Foxws\AV1\Support\CommandBuilder;
 use Illuminate\Process\Factory as ProcessFactory;
 use Illuminate\Process\ProcessResult;
 use Illuminate\Support\Facades\Config;
