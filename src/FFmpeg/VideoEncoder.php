@@ -6,7 +6,6 @@ namespace Foxws\AV1\FFmpeg;
 
 use Illuminate\Process\Factory as ProcessFactory;
 use Illuminate\Process\ProcessResult;
-use Illuminate\Support\Facades\Config;
 use Psr\Log\LoggerInterface;
 
 /**
