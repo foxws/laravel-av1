@@ -114,7 +114,7 @@ php artisan av1:info
 
 ## Quick Start
 
-### FFmpeg Hardware Encoding (Recommended)
+### FFmpeg Hardware Encoding
 
 Encode videos using FFmpeg with automatic hardware acceleration detection:
 
@@ -161,8 +161,6 @@ $result = AV1::open('input.mp4')
     ->export()
     ->save('output.mp4');
 ```
-
-> **Note**: The package is designed to support multiple encoders (av1an, svt-av1, etc.) in future versions using the same fluent API pattern.
 
 ### VMAF Encode
 

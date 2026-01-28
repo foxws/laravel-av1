@@ -241,8 +241,10 @@ class MediaOpener
 
         // Set target VMAF if not already set
         $options = $this->encoder->builder()->getOptions();
+
         if (! isset($options['target_vmaf']) && ! isset($options['min-vmaf'])) {
             $targetVmaf = $this->config['ab-av1']['min_vmaf'] ?? 95;
+
             $this->encoder->builder()->targetVmaf($targetVmaf);
         }
 
