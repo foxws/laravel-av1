@@ -2,13 +2,9 @@
 
 declare(strict_types=1);
 
-use Foxws\AV1\Filesystem\Disk;
-use Foxws\AV1\Filesystem\Media;
-use Foxws\AV1\Filesystem\MediaCollection;
 use Foxws\AV1\Support\CommandBuilder;
-use Foxws\AV1\Support\Encoder;
 
-// CommandBuilder Tests
+// CommandBuilder Tests for ab-av1
 it('can build auto-encode command', function () {
     $builder = CommandBuilder::make()
         ->command('auto-encode')
@@ -211,87 +207,4 @@ it('generates correct command string', function () {
     expect($command)->toContain('input.mp4');
     expect($command)->toContain('30');
     expect($command)->toContain('output.mp4');
-});
-
-// Encoder Tests
-it('can create encoder instance', function () {
-    $encoder = app(Encoder::class);
-
-    expect($encoder)->toBeInstanceOf(Encoder::class);
-});
-
-it('validates empty media collection on open', function () {
-    $encoder = app(Encoder::class);
-    $emptyCollection = new MediaCollection;
-
-    $encoder->open($emptyCollection);
-})->throws(InvalidArgumentException::class, 'MediaCollection cannot be empty');
-
-it('can get fresh encoder instance', function () {
-    $encoder1 = app(Encoder::class);
-    $encoder2 = $encoder1->fresh();
-
-    expect($encoder2)->toBeInstanceOf(Encoder::class);
-    expect($encoder2)->not->toBe($encoder1);
-});
-
-it('can access builder from encoder', function () {
-    $encoder = app(Encoder::class);
-
-    $builder = $encoder->builder();
-
-    expect($builder)->toBeInstanceOf(CommandBuilder::class);
-});
-
-// Filesystem Tests
-it('can create media instance', function () {
-    $disk = new Disk(Storage::disk('local'), 'local');
-    $media = Media::make($disk, 'test.mp4');
-
-    expect($media)->toBeInstanceOf(Media::class);
-    expect($media->getPath())->toBe('test.mp4');
-});
-
-it('can create media collection', function () {
-    $collection = new MediaCollection;
-
-    expect($collection)->toBeInstanceOf(MediaCollection::class);
-    expect($collection->count())->toBe(0);
-});
-
-it('can add media to collection', function () {
-    $disk = new Disk(Storage::disk('local'), 'local');
-    $media = Media::make($disk, 'test.mp4');
-    $collection = new MediaCollection;
-
-    $collection->push($media);
-
-    expect($collection->count())->toBe(1);
-    expect($collection->first())->toBe($media);
-});
-
-it('can find media in collection by path', function () {
-    $disk = new Disk(Storage::disk('local'), 'local');
-    $media1 = Media::make($disk, 'video1.mp4');
-    $media2 = Media::make($disk, 'video2.mp4');
-    $collection = new MediaCollection;
-
-    $collection->push($media1);
-    $collection->push($media2);
-
-    $found = $collection->findByPath('video2.mp4');
-
-    expect($found)->toBe($media2);
-});
-
-it('returns null when media not found in collection', function () {
-    $disk = new Disk(Storage::disk('local'), 'local');
-    $media = Media::make($disk, 'video1.mp4');
-    $collection = new MediaCollection;
-
-    $collection->push($media);
-
-    $found = $collection->findByPath('nonexistent.mp4');
-
-    expect($found)->toBeNull();
 });

@@ -2,10 +2,6 @@
 
 All notable changes to `laravel-av1` will be documented in this file.
 
-## 0.4.0 - 2026-01-26
-
-**Full Changelog**: https://github.com/foxws/laravel-av1/compare/0.3.0...0.4.0
-
 ## 0.3.0 - 2026-01-26
 
 ### What's Changed
