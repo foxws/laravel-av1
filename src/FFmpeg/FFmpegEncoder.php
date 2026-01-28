@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Foxws\AV1\FFmpeg;
 
 use Foxws\AV1\Contracts\EncoderInterface;
-use Foxws\AV1\FFmpeg\HardwareDetector;
 use Foxws\AV1\Filesystem\TemporaryDirectories;
 use Illuminate\Process\Factory as ProcessFactory;
 use Illuminate\Process\ProcessResult;
