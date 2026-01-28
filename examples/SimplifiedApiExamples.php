@@ -79,7 +79,7 @@ AV1::encoder()
 
 use Foxws\AV1\FFmpeg\HardwareAcceleration\HardwareDetector;
 
-$detector = new HardwareDetector();
+$detector = new HardwareDetector;
 
 // Check available encoders
 $encoders = $detector->getAvailableEncoders();
@@ -90,7 +90,7 @@ foreach ($encoders as $name => $info) {
 // Check if GPU available
 if ($detector->hasHardwareAcceleration()) {
     echo "GPU encoding available!\n";
-    echo "Best hardware encoder: " . $detector->getBestHardwareEncoder() . "\n";
+    echo 'Best hardware encoder: '.$detector->getBestHardwareEncoder()."\n";
 }
 
 // Get all info
@@ -133,5 +133,5 @@ $result = AV1::encoder()
 if ($result->successful()) {
     echo "Encoding completed successfully!\n";
 } else {
-    echo "Encoding failed: " . $result->errorOutput() . "\n";
+    echo 'Encoding failed: '.$result->errorOutput()."\n";
 }
