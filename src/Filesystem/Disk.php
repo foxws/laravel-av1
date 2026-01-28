@@ -25,9 +25,16 @@ class Disk
     {
         $storage = Storage::disk($this->name);
 
-        // If it's a local disk, return direct path
-        if (method_exists($storage, 'path')) {
-            return $storage->path($path);
+        // Try to get local path, fallback to download for remote disks
+        try {
+            $localPath = $storage->path($path);
+
+            // Verify it's actually a local file
+            if (file_exists($localPath)) {
+                return $localPath;
+            }
+        } catch (\RuntimeException $e) {
+            // Remote disk - will download to temp
         }
 
         // For remote disks (S3, etc), download to temp
