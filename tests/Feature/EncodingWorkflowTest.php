@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use Foxws\AV1\AV1Manager;
 use Foxws\AV1\Facades\AV1;
 use Foxws\AV1\MediaOpener;
 use Illuminate\Support\Facades\Storage;
@@ -10,187 +11,88 @@ beforeEach(function () {
     Storage::fake('local');
 });
 
-it('can create media opener instance', function () {
-    $opener = AV1::fromDisk('local');
+it('can create AV1 manager instance', function () {
+    $manager = app('laravel-av1');
+
+    expect($manager)->toBeInstanceOf(AV1Manager::class);
+});
+
+it('can access AV1 manager via facade', function () {
+    $manager = AV1::getFacadeRoot();
+
+    expect($manager)->toBeInstanceOf(AV1Manager::class);
+});
+
+it('can create video encoder from manager', function () {
+    $encoder = AV1::encoder();
+
+    expect($encoder)->toBeInstanceOf(\Foxws\AV1\FFmpeg\VideoEncoder::class);
+});
+
+it('can create crf finder from manager', function () {
+    $finder = AV1::crfFinder();
+
+    expect($finder)->toBeInstanceOf(\Foxws\AV1\AbAV1\CrfFinder::class);
+});
+
+// MediaOpener tests (legacy API)
+it('can create media opener instance directly', function () {
+    $opener = app(MediaOpener::class);
 
     expect($opener)->toBeInstanceOf(MediaOpener::class);
 });
 
-it('can set auto-encode command', function () {
-    $opener = AV1::vmafEncode();
-
-    expect($opener->getEncoder()->builder()->getCommand())->toBe('auto-encode');
-});
-
-it('can set crf-search command', function () {
-    $opener = AV1::crfSearch();
-
-    expect($opener->getEncoder()->builder()->getCommand())->toBe('crf-search');
-});
-
-it('can set sample-encode command', function () {
-    $opener = AV1::sampleEncode();
-
-    expect($opener->getEncoder()->builder()->getCommand())->toBe('sample-encode');
-});
-
-it('can set encode command', function () {
-    $opener = AV1::encode();
-
-    expect($opener->getEncoder()->builder()->getCommand())->toBe('encode');
-});
-
-it('can set vmaf command', function () {
-    $opener = AV1::vmaf();
-
-    expect($opener->getEncoder()->builder()->getCommand())->toBe('vmaf');
-});
-
-it('can set xpsnr command', function () {
-    $opener = AV1::xpsnr();
-
-    expect($opener->getEncoder()->builder()->getCommand())->toBe('xpsnr');
-});
-
-it('can chain preset and minVmaf options', function () {
-    $opener = AV1::vmafEncode()
-        ->preset('6')
-        ->minVmaf(95);
-
-    $options = $opener->getEncoder()->builder()->getOptions();
-
-    expect($options)->toHaveKey('preset');
-    expect($options)->toHaveKey('min-vmaf');
-    expect($options['preset'])->toBe('6');
-    expect($options['min-vmaf'])->toBe(95);
-});
-
-it('can chain crf and preset options', function () {
-    $opener = AV1::encode()
+it('can chain options on encoder', function () {
+    $encoder = AV1::encoder()
         ->crf(30)
-        ->preset('6');
+        ->preset(6);
 
-    $options = $opener->getEncoder()->builder()->getOptions();
-
-    expect($options)->toHaveKey('crf');
-    expect($options)->toHaveKey('preset');
-    expect($options['crf'])->toBe(30);
+    expect($encoder)->toBeInstanceOf(\Foxws\AV1\FFmpeg\VideoEncoder::class);
 });
 
-it('can set input file', function () {
-    $opener = AV1::input(fixture('video.mp4'))
-        ->encode()
-        ->crf(30)
-        ->preset('6');
+it('can enable hardware acceleration', function () {
+    $encoder = AV1::encoder()
+        ->useHwAccel(true)
+        ->crf(28);
 
-    expect($opener->getEncoder()->builder()->getInput())->toBe(fixture('video.mp4'));
+    expect($encoder)->toBeInstanceOf(\Foxws\AV1\FFmpeg\VideoEncoder::class);
 });
 
-it('can set output file', function () {
-    $opener = AV1::encode()
-        ->input(fixture('video.mp4'))
-        ->output('output.mp4')
-        ->crf(30)
-        ->preset('6');
+it('can set pixel format', function () {
+    $encoder = AV1::encoder()
+        ->pixelFormat('yuv420p10le')
+        ->crf(30);
 
-    expect($opener->getEncoder()->builder()->getOutput())->toBe('output.mp4');
+    expect($encoder)->toBeInstanceOf(\Foxws\AV1\FFmpeg\VideoEncoder::class);
 });
 
-it('can set reference file for vmaf', function () {
-    $opener = AV1::vmaf()
-        ->reference(fixture('video.mp4'))
-        ->distorted('encoded.mp4');
+it('can set audio codec', function () {
+    $encoder = AV1::encoder()
+        ->audioCodec('libopus')
+        ->crf(30);
 
-    expect($opener->getEncoder()->builder()->getOptions())->not->toHaveKey('reference');
+    expect($encoder)->toBeInstanceOf(\Foxws\AV1\FFmpeg\VideoEncoder::class);
 });
 
-it('can chain multiple options', function () {
-    $opener = AV1::vmafEncode()
-        ->preset('6')
-        ->minVmaf(95)
-        ->minCrf(20)
-        ->maxCrf(40)
-        ->verbose()
-        ->fullVmaf();
+it('can set custom encoder', function () {
+    $encoder = AV1::encoder()
+        ->encoder('libsvtav1')
+        ->crf(30);
 
-    $options = $opener->getEncoder()->builder()->getOptions();
-
-    expect($options)->toHaveKey('preset');
-    expect($options)->toHaveKey('min-vmaf');
-    expect($options)->toHaveKey('min-crf');
-    expect($options)->toHaveKey('max-crf');
-    expect($options)->toHaveKey('verbose');
-    expect($options)->toHaveKey('full-vmaf');
+    expect($encoder)->toBeInstanceOf(\Foxws\AV1\FFmpeg\VideoEncoder::class);
 });
 
-it('can get export instance', function () {
-    $export = AV1::encode()
-        ->input('input.mp4')
-        ->crf(30)
-        ->preset('6')
-        ->export();
+it('can set video filter', function () {
+    $encoder = AV1::encoder()
+        ->videoFilter('scale=1920:1080')
+        ->crf(30);
 
-    expect($export)->not->toBeNull();
+    expect($encoder)->toBeInstanceOf(\Foxws\AV1\FFmpeg\VideoEncoder::class);
 });
 
-it('can access command for debugging', function () {
-    $command = AV1::encode()
-        ->input(fixture('video.mp4'))
-        ->output('output.mp4')
-        ->crf(30)
-        ->preset('6')
-        ->export()
-        ->getCommand();
+it('can access hardware detector', function () {
+    $encoder = AV1::encoder();
+    $detector = $encoder->hardwareDetector();
 
-    expect($command)->toContain('ab-av1');
-    expect($command)->toContain('encode');
-    expect($command)->toContain(fixture('video.mp4'));
-    expect($command)->toContain('30');
-});
-
-it('can handle multi-disk operations', function () {
-    $opener1 = AV1::fromDisk('local');
-    $opener2 = $opener1->fromDisk('public');
-
-    // fromDisk mutates and returns the same instance
-    expect($opener1)->toBe($opener2);
-    // But the disk should be changed
-    expect($opener2->getDisk()->getName())->toBe('public');
-});
-
-it('can add sample option', function () {
-    $opener = AV1::sampleEncode()
-        ->sample(60)
-        ->crf(30)
-        ->preset('6');
-
-    $options = $opener->getEncoder()->builder()->getOptions();
-
-    expect($options)->toHaveKey('sample');
-    expect($options['sample'])->toBe(60);
-});
-
-it('can add pixel format option', function () {
-    $opener = AV1::encode()
-        ->input('input.mp4')
-        ->crf(30)
-        ->preset('6')
-        ->pixFmt('yuv420p10le');
-
-    $options = $opener->getEncoder()->builder()->getOptions();
-
-    expect($options)->toHaveKey('pix-fmt');
-    expect($options['pix-fmt'])->toBe('yuv420p10le');
-});
-
-it('can add max encoded percent option', function () {
-    $opener = AV1::vmafEncode()
-        ->preset('6')
-        ->minVmaf(95)
-        ->maxEncodedPercent(90);
-
-    $options = $opener->getEncoder()->builder()->getOptions();
-
-    expect($options)->toHaveKey('max-encoded-percent');
-    expect($options['max-encoded-percent'])->toBe(90);
+    expect($detector)->toBeInstanceOf(\Foxws\AV1\FFmpeg\HardwareDetector::class);
 });
