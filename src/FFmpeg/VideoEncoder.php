@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Foxws\AV1\FFmpeg;
 
+use Foxws\AV1\EncodingResult;
 use Illuminate\Process\Factory as ProcessFactory;
-use Illuminate\Process\ProcessResult;
 use Psr\Log\LoggerInterface;
 
 /**
@@ -145,7 +145,7 @@ class VideoEncoder
     /**
      * Encode video
      */
-    public function encode(string $inputPath, string $outputPath): ProcessResult
+    public function encode(string $inputPath, string $outputPath): EncodingResult
     {
         $args = $this->buildCommand($inputPath, $outputPath);
 
@@ -162,9 +162,11 @@ class VideoEncoder
         /** @var ProcessFactory $factory */
         $factory = app(ProcessFactory::class);
 
-        return $factory
+        $result = $factory
             ->timeout($this->timeout)
             ->run($args);
+
+        return new EncodingResult($result, $outputPath);
     }
 
     /**

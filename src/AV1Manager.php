@@ -21,6 +21,22 @@ class AV1Manager
     }
 
     /**
+     * Create a video encoder instance
+     */
+    public function encoder(): VideoEncoder
+    {
+        return app(VideoEncoder::class);
+    }
+
+    /**
+     * Create a CRF finder instance
+     */
+    public function crfFinder(): CrfFinder
+    {
+        return app(CrfFinder::class);
+    }
+
+    /**
      * Find optimal CRF value using ab-av1
      */
     public function findCrf(
@@ -30,24 +46,6 @@ class AV1Manager
         ?int $minCrf = null,
         ?int $maxCrf = null
     ): int {
-        $finder = new CrfFinder($this->logger);
-
-        return $finder->find($inputPath, $targetVmaf, $preset, $minCrf, $maxCrf);
-    }
-
-    /**
-     * Create a video encoder instance (removed immediate encoding - use encoder()->encode() instead)
-     */
-    public function encoder(): VideoEncoder
-    {
-        return new VideoEncoder($this->logger);
-    }
-
-    /**
-     * Create a CRF finder instance
-     */
-    public function crfFinder(): CrfFinder
-    {
-        return new CrfFinder($this->logger);
+        return $this->crfFinder()->find($inputPath, $targetVmaf, $preset, $minCrf, $maxCrf);
     }
 }

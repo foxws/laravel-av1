@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 use Foxws\AV1\AV1Manager;
 use Foxws\AV1\Facades\AV1;
-use Foxws\AV1\MediaOpener;
 use Illuminate\Support\Facades\Storage;
 
 beforeEach(function () {
@@ -33,13 +32,6 @@ it('can create crf finder from manager', function () {
     $finder = AV1::crfFinder();
 
     expect($finder)->toBeInstanceOf(\Foxws\AV1\AbAV1\CrfFinder::class);
-});
-
-// MediaOpener tests (legacy API)
-it('can create media opener instance directly', function () {
-    $opener = app(MediaOpener::class);
-
-    expect($opener)->toBeInstanceOf(MediaOpener::class);
 });
 
 it('can chain options on encoder', function () {

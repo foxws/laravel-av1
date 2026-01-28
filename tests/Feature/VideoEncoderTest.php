@@ -83,6 +83,14 @@ it('can access hardware detector', function () {
     expect($detector)->toBeInstanceOf(\Foxws\AV1\FFmpeg\HardwareDetector::class);
 });
 
+it('encode returns encoding result', function () {
+    $encoder = new VideoEncoder;
+
+    $result = $encoder->encode(fixture('video.mp4'), 'output.mp4');
+
+    expect($result)->toBeInstanceOf(\Foxws\AV1\EncodingResult::class);
+});
+
 it('respects config defaults', function () {
     Config::set('av1.ffmpeg.default_crf', 28);
     Config::set('av1.ffmpeg.default_preset', 8);

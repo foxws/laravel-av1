@@ -5,7 +5,6 @@ declare(strict_types=1);
 use Foxws\AV1\AV1Manager;
 use Foxws\AV1\Facades\AV1;
 use Foxws\AV1\FFmpeg\VideoEncoder;
-use Foxws\AV1\MediaOpener;
 
 it('registers AV1 manager in service container', function () {
     $manager = app('laravel-av1');
@@ -66,12 +65,6 @@ it('can chain encoder methods', function () {
         ->useHwAccel(true);
 
     expect($encoder)->toBeInstanceOf(VideoEncoder::class);
-});
-
-it('registers media opener for legacy support', function () {
-    $opener = app(MediaOpener::class);
-
-    expect($opener)->toBeInstanceOf(MediaOpener::class);
 });
 
 it('can access hardware detector', function () {
