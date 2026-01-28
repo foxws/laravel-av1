@@ -207,7 +207,7 @@ class MediaOpener
         // Apply default FFmpeg configuration
         $ffmpegConfig = $this->config['ffmpeg'] ?? [];
 
-        if (isset($ffmpegConfig['default_crf']) && ! $this->encoder->builder()->getOptions()['crf'] ?? null) {
+        if (isset($ffmpegConfig['default_crf']) && ! isset($this->encoder->builder()->getOptions()['crf'])) {
             $this->encoder->builder()->crf($ffmpegConfig['default_crf']);
         }
 

@@ -313,7 +313,7 @@ class FFmpegEncoder implements EncoderInterface
             return $matches[1];
         }
 
-        return explode("\n", $output)[0] ?? $output;
+        return explode("\n", $output)[0];
     }
 
     /**
