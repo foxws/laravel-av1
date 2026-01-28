@@ -39,7 +39,7 @@ class Disk
      */
     protected function downloadToTemp(string $path): string
     {
-        $tempPath = storage_path('app/temp/' . uniqid('av1_') . '_' . basename($path));
+        $tempPath = storage_path('app/temp/'.uniqid('av1_').'_'.basename($path));
         $tempDir = dirname($tempPath);
 
         if (! is_dir($tempDir)) {

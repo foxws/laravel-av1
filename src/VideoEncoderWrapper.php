@@ -33,7 +33,7 @@ class VideoEncoderWrapper
 
         // Generate temp output if not specified
         if ($outputPath === null) {
-            $outputPath = storage_path('app/temp/' . uniqid('av1_') . '.mp4');
+            $outputPath = storage_path('app/temp/'.uniqid('av1_').'.mp4');
             $tempDir = dirname($outputPath);
             if (! is_dir($tempDir)) {
                 mkdir($tempDir, 0755, true);
