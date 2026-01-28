@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Foxws\AV1\Support;
 
+use Foxws\AV1\AbAV1\AbAV1Encoder;
 use Foxws\AV1\Contracts\EncoderInterface;
 use Foxws\AV1\Filesystem\MediaCollection;
 use Foxws\AV1\Filesystem\TemporaryDirectories;

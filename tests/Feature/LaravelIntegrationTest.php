@@ -2,44 +2,41 @@
 
 declare(strict_types=1);
 
+use Foxws\AV1\AV1Manager;
 use Foxws\AV1\Facades\AV1;
+use Foxws\AV1\FFmpeg\VideoEncoder;
 use Foxws\AV1\MediaOpener;
 
-it('registers media opener in service container', function () {
-    $opener = app(MediaOpener::class);
+it('registers AV1 manager in service container', function () {
+    $manager = app('laravel-av1');
 
-    expect($opener)->toBeInstanceOf(MediaOpener::class);
+    expect($manager)->toBeInstanceOf(AV1Manager::class);
 });
 
-it('can resolve media opener via container', function () {
-    $opener = app()->make(MediaOpener::class);
+it('can resolve AV1 manager via container', function () {
+    $manager = app()->make('laravel-av1');
 
-    expect($opener)->toBeInstanceOf(MediaOpener::class);
+    expect($manager)->toBeInstanceOf(AV1Manager::class);
 });
 
-it('facade resolves to media opener instance', function () {
-    $result = AV1::encode();
+it('facade resolves to AV1 manager instance', function () {
+    $manager = AV1::getFacadeRoot();
 
-    expect($result)->toBeInstanceOf(MediaOpener::class);
+    expect($manager)->toBeInstanceOf(AV1Manager::class);
 });
 
-it('can use facade for all command types', function () {
-    expect(AV1::vmafEncode())->toBeInstanceOf(MediaOpener::class);
-    expect(AV1::crfSearch())->toBeInstanceOf(MediaOpener::class);
-    expect(AV1::sampleEncode())->toBeInstanceOf(MediaOpener::class);
-    expect(AV1::encode())->toBeInstanceOf(MediaOpener::class);
-    expect(AV1::vmaf())->toBeInstanceOf(MediaOpener::class);
-    expect(AV1::xpsnr())->toBeInstanceOf(MediaOpener::class);
+it('can use facade to create encoder', function () {
+    $encoder = AV1::encoder();
+
+    expect($encoder)->toBeInstanceOf(VideoEncoder::class);
 });
 
-it('can access facade methods statically', function () {
-    $opener = AV1::encode()
-        ->input('input.mp4')
-        ->output('output.mp4')
-        ->crf(30);
+it('can access facade encoder methods', function () {
+    $encoder = AV1::encoder()
+        ->crf(30)
+        ->preset(6);
 
-    expect($opener->getEncoder()->builder()->getInput())->toBe('input.mp4');
-    expect($opener->getEncoder()->builder()->getOutput())->toBe('output.mp4');
+    expect($encoder)->toBeInstanceOf(VideoEncoder::class);
 });
 
 it('service provider is registered', function () {
@@ -49,65 +46,37 @@ it('service provider is registered', function () {
 });
 
 it('can instantiate multiple independent encoders', function () {
-    $encoder1 = AV1::encode()
-        ->input(fixture('video.mp4'))
-        ->output('encoded1.mp4')
-        ->crf(30);
+    $encoder1 = AV1::encoder()->crf(30);
+    $encoder2 = AV1::encoder()->crf(35);
 
-    $encoder2 = AV1::encode()
-        ->input(fixture('video.mp4'))
-        ->output('encoded2.mp4')
-        ->crf(35);
-
-    expect($encoder1->getEncoder()->builder()->getInput())->toBe(fixture('video.mp4'));
-    expect($encoder2->getEncoder()->builder()->getInput())->toBe(fixture('video.mp4'));
+    expect($encoder1)->toBeInstanceOf(VideoEncoder::class);
+    expect($encoder2)->toBeInstanceOf(VideoEncoder::class);
 });
 
-it('facade methods return independent state', function () {
-    // When resolving through the container, each gets a fresh instance
-    $opener1 = app(MediaOpener::class)->encode()->input('video1.mp4');
-    $opener2 = app(MediaOpener::class)->encode()->input('video2.mp4');
+it('can create CRF finder', function () {
+    $finder = AV1::crfFinder();
 
-    // Each call should have independent state
-    expect($opener1->getEncoder()->builder()->getInput())->toBe('video1.mp4');
-    expect($opener2->getEncoder()->builder()->getInput())->toBe('video2.mp4');
+    expect($finder)->toBeInstanceOf(\Foxws\AV1\AbAV1\CrfFinder::class);
 });
 
-it('can chain facade methods with instance methods', function () {
-    $result = AV1::encode()
-        ->input(fixture('video.mp4'))
-        ->output('output.mp4')
+it('can chain encoder methods', function () {
+    $encoder = AV1::encoder()
         ->crf(30)
-        ->preset('6')
-        ->verbose();
+        ->preset(6)
+        ->useHwAccel(true);
 
-    expect($result->getEncoder()->builder()->getInput())->toBe(fixture('video.mp4'));
-    expect($result->getEncoder()->builder()->getOptions())->toHaveKey('verbose');
+    expect($encoder)->toBeInstanceOf(VideoEncoder::class);
 });
 
-it('can export from facade chain', function () {
-    $exporter = AV1::encode()
-        ->input(fixture('video.mp4'))
-        ->output('output.mp4')
-        ->crf(30)
-        ->export();
+it('registers media opener for legacy support', function () {
+    $opener = app(MediaOpener::class);
 
-    expect($exporter)->not->toBeNull();
+    expect($opener)->toBeInstanceOf(MediaOpener::class);
 });
 
-it('facade works with all ab-av1 commands', function () {
-    // Resolve fresh instances for each command to avoid shared state
-    $vmafEncode = app(MediaOpener::class)->vmafEncode();
-    $crfSearch = app(MediaOpener::class)->crfSearch();
-    $sampleEncode = app(MediaOpener::class)->sampleEncode();
-    $encode = app(MediaOpener::class)->encode();
-    $vmaf = app(MediaOpener::class)->vmaf();
-    $xpsnr = app(MediaOpener::class)->xpsnr();
+it('can access hardware detector', function () {
+    $encoder = AV1::encoder();
+    $detector = $encoder->hardwareDetector();
 
-    expect($vmafEncode->getEncoder()->builder()->getCommand())->toBe('auto-encode');
-    expect($crfSearch->getEncoder()->builder()->getCommand())->toBe('crf-search');
-    expect($sampleEncode->getEncoder()->builder()->getCommand())->toBe('sample-encode');
-    expect($encode->getEncoder()->builder()->getCommand())->toBe('encode');
-    expect($vmaf->getEncoder()->builder()->getCommand())->toBe('vmaf');
-    expect($xpsnr->getEncoder()->builder()->getCommand())->toBe('xpsnr');
+    expect($detector)->toBeInstanceOf(\Foxws\AV1\FFmpeg\HardwareDetector::class);
 });
