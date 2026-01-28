@@ -21,6 +21,7 @@ use Illuminate\Support\Traits\ForwardsCalls;
  * @method bool move(string $from, string $to)
  * @method int size(string $path)
  * @method int lastModified(string $path)
+ * @method string path(string $path)
  * @method array files(string|null $directory = null, bool $recursive = false)
  * @method array allFiles(string|null $directory = null)
  * @method array directories(string|null $directory = null, bool $recursive = false)
