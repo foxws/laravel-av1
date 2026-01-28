@@ -5,7 +5,6 @@
  */
 
 use Foxws\AV1\Facades\AV1;
-use Illuminate\Support\Facades\Storage;
 
 // Example 1: Encode and export to S3
 AV1::encoder()

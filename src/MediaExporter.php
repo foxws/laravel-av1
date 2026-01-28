@@ -100,7 +100,7 @@ class MediaExporter
         if ($filename) {
             // If target path is set, use it as directory
             if ($this->targetPath) {
-                return rtrim($this->targetPath, '/') . '/' . $filename;
+                return rtrim($this->targetPath, '/').'/'.$filename;
             }
 
             return $filename;
@@ -116,7 +116,7 @@ class MediaExporter
             }
 
             // Otherwise treat as directory
-            return rtrim($this->targetPath, '/') . '/' . $basename;
+            return rtrim($this->targetPath, '/').'/'.$basename;
         }
 
         return $basename;
