@@ -2,19 +2,19 @@
 
 declare(strict_types=1);
 
-use Foxws\AV1\FFmpeg\HardwareDetector;
 use Foxws\AV1\FFmpeg\Enums\HardwareEncoder;
 use Foxws\AV1\FFmpeg\Enums\SoftwareEncoder;
+use Foxws\AV1\FFmpeg\HardwareDetector;
 use Illuminate\Support\Facades\Config;
 
 it('can create hardware detector instance', function () {
-    $detector = new HardwareDetector();
+    $detector = new HardwareDetector;
 
     expect($detector)->toBeInstanceOf(HardwareDetector::class);
 });
 
 it('can get available encoders', function () {
-    $detector = new HardwareDetector();
+    $detector = new HardwareDetector;
     $encoders = $detector->getAvailableEncoders();
 
     expect($encoders)->toBeArray();
@@ -27,7 +27,7 @@ it('respects encoder priority from config', function () {
         'libsvtav1',
     ]);
 
-    $detector = new HardwareDetector();
+    $detector = new HardwareDetector;
     $encoders = $detector->getAvailableEncoders();
 
     if (! empty($encoders)) {
@@ -43,7 +43,7 @@ it('respects encoder priority from config', function () {
 });
 
 it('can check if specific encoder is available', function () {
-    $detector = new HardwareDetector();
+    $detector = new HardwareDetector;
 
     $result = $detector->hasEncoder('libsvtav1');
 
@@ -51,7 +51,7 @@ it('can check if specific encoder is available', function () {
 });
 
 it('can get best encoder', function () {
-    $detector = new HardwareDetector();
+    $detector = new HardwareDetector;
     $best = $detector->getBestEncoder();
 
     if ($best !== null) {
@@ -62,7 +62,7 @@ it('can get best encoder', function () {
 });
 
 it('can get best hardware encoder', function () {
-    $detector = new HardwareDetector();
+    $detector = new HardwareDetector;
     $best = $detector->getBestHardwareEncoder();
 
     if ($best !== null) {
@@ -74,14 +74,14 @@ it('can get best hardware encoder', function () {
 });
 
 it('can check hardware acceleration availability', function () {
-    $detector = new HardwareDetector();
+    $detector = new HardwareDetector;
     $hasHw = $detector->hasHardwareAcceleration();
 
     expect($hasHw)->toBeBool();
 });
 
 it('can get hardware accel method', function () {
-    $detector = new HardwareDetector();
+    $detector = new HardwareDetector;
     $method = $detector->getHardwareAccelMethod();
 
     if ($method !== null) {
@@ -94,7 +94,7 @@ it('can get hardware accel method', function () {
 it('respects hwaccel priority from config', function () {
     Config::set('av1.ffmpeg.hwaccel_priority', ['cuda', 'qsv', 'vaapi']);
 
-    $detector = new HardwareDetector();
+    $detector = new HardwareDetector;
     $method = $detector->getHardwareAccelMethod();
 
     // Just check it doesn't throw an error
@@ -102,7 +102,7 @@ it('respects hwaccel priority from config', function () {
 });
 
 it('can get encoder info', function () {
-    $detector = new HardwareDetector();
+    $detector = new HardwareDetector;
     $info = $detector->getEncoderInfo();
 
     expect($info)->toHaveKey('encoders');
@@ -113,7 +113,7 @@ it('can get encoder info', function () {
 });
 
 it('can clear encoder cache', function () {
-    $detector = new HardwareDetector();
+    $detector = new HardwareDetector;
 
     $detector->clearCache();
 
