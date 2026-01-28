@@ -96,19 +96,30 @@ $info = AV1::encoder()
 ```
 src/
   AbAV1/
+    AbAV1Encoder.php           - ab-av1 encoder wrapper
     CrfFinder.php              - Finds optimal CRF using ab-av1
+    CrfOptimizer.php           - CRF optimization utilities
 
   FFmpeg/
     VideoEncoder.php           - Encodes videos with FFmpeg
-    HardwareAcceleration/
-      HardwareDetector.php     - Detects GPU encoders
-      Enums/
-        HardwareEncoder.php    - Hardware encoder enum
-        SoftwareEncoder.php    - Software encoder enum
+    FFmpegEncoder.php          - FFmpeg encoder wrapper
+    FFmpegCommandBuilder.php   - Builds FFmpeg command arrays
+    HardwareDetector.php       - Detects GPU encoders
+    Enums/
+      HardwareEncoder.php      - Hardware encoder enum
+      HardwareAccelMethod.php  - Hardware accel method enum
+      SoftwareEncoder.php      - Software encoder enum
+
+  Support/
+    CommandBuilder.php         - ab-av1 command builder
+    Encoder.php                - Main encoder orchestrator
+    EncoderResult.php          - Encoding result wrapper
+    ProcessOutput.php          - Process output handler
 
   AV1Manager.php               - Main manager class
+  MediaOpener.php              - Legacy media opener (deprecated)
   Facades/
-    AV1.php                    - Main facade (v2.0 - breaking changes)
+    AV1.php                    - Main facade
 ```
 
 ## Migration from v1.x

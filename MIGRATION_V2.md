@@ -9,6 +9,7 @@ v2.0 introduces a completely new, simplified API that breaks backward compatibil
 #### 1. Facade API Changed
 
 **v1.x:**
+
 ```php
 use Foxws\AV1\Facades\AV1;
 
@@ -22,6 +23,7 @@ AV1::open('input.mp4')
 ```
 
 **v2.0:**
+
 ```php
 use Foxws\AV1\Facades\AV1;
 
@@ -34,17 +36,18 @@ AV1::encoder()
 
 #### 2. Method Names Simplified
 
-| v1.x | v2.0 |
-|------|------|
-| `useHardwareAcceleration()` | `useHwAccel()` |
-| `ffmpegEncode()` | `encoder()` |
-| `ffmpegAutoEncode()` | `findCrf()` + `encoder()` |
-| `targetVmaf()` | Second param in `findCrf()` |
-| `export()->save()` | `encode()` |
+| v1.x                        | v2.0                        |
+| --------------------------- | --------------------------- |
+| `useHardwareAcceleration()` | `useHwAccel()`              |
+| `ffmpegEncode()`            | `encoder()`                 |
+| `ffmpegAutoEncode()`        | `findCrf()` + `encoder()`   |
+| `targetVmaf()`              | Second param in `findCrf()` |
+| `export()->save()`          | `encode()`                  |
 
 #### 3. CRF Finding
 
 **v1.x:**
+
 ```php
 // Auto CRF was part of the encoding chain
 AV1::open('input.mp4')
@@ -55,6 +58,7 @@ AV1::open('input.mp4')
 ```
 
 **v2.0:**
+
 ```php
 // Explicit CRF finding
 $crf = AV1::findCrf('input.mp4', targetVmaf: 95);
@@ -72,6 +76,7 @@ AV1::encoder()
 #### 4. No More Disk Management
 
 **v1.x:**
+
 ```php
 // Complex disk management
 AV1::fromDisk('s3')
@@ -83,6 +88,7 @@ AV1::fromDisk('s3')
 ```
 
 **v2.0:**
+
 ```php
 // Handle storage in your application layer
 use Illuminate\Support\Facades\Storage;
@@ -104,6 +110,7 @@ Storage::disk('s3')->put('output.mp4', file_get_contents('output.mp4'));
 ### Example 1: Basic Encoding
 
 **v1.x:**
+
 ```php
 AV1::open('input.mp4')
     ->ffmpegEncode()
@@ -114,6 +121,7 @@ AV1::open('input.mp4')
 ```
 
 **v2.0:**
+
 ```php
 AV1::encoder()
     ->crf(28)
@@ -124,6 +132,7 @@ AV1::encoder()
 ### Example 2: Hardware Acceleration
 
 **v1.x:**
+
 ```php
 AV1::open('input.mp4')
     ->ffmpegEncode()
@@ -134,6 +143,7 @@ AV1::open('input.mp4')
 ```
 
 **v2.0:**
+
 ```php
 AV1::encoder()
     ->useHwAccel()
@@ -144,6 +154,7 @@ AV1::encoder()
 ### Example 3: Auto CRF
 
 **v1.x:**
+
 ```php
 AV1::open('input.mp4')
     ->ffmpegAutoEncode()
@@ -155,6 +166,7 @@ AV1::open('input.mp4')
 ```
 
 **v2.0:**
+
 ```php
 AV1::encoder()
     ->crf(AV1::findCrf('input.mp4', 95, 6))
@@ -166,6 +178,7 @@ AV1::encoder()
 ### Example 4: Custom Settings
 
 **v1.x:**
+
 ```php
 AV1::open('input.mp4')
     ->ffmpegEncode()
@@ -178,6 +191,7 @@ AV1::open('input.mp4')
 ```
 
 **v2.0:**
+
 ```php
 AV1::encoder()
     ->crf(28)
@@ -194,15 +208,25 @@ v2.0 reorganizes the codebase into clear domains:
 ```
 src/
   AbAV1/
-    CrfFinder.php              # ab-av1 CRF optimization
+    AbAV1Encoder.php           # ab-av1 encoder wrapper
+    CrfFinder.php              # CRF optimization
+    CrfOptimizer.php           # CRF utilities
 
   FFmpeg/
     VideoEncoder.php           # FFmpeg AV1 encoding
-    HardwareAcceleration/
-      HardwareDetector.php     # GPU detection
-      Enums/
-        HardwareEncoder.php    # Hardware encoder enum
-        SoftwareEncoder.php    # Software encoder enum
+    FFmpegEncoder.php          # FFmpeg encoder wrapper
+    FFmpegCommandBuilder.php   # Command array builder (reusable)
+    HardwareDetector.php       # GPU detection
+    Enums/
+      HardwareEncoder.php      # Hardware encoder enum
+      HardwareAccelMethod.php  # Hardware accel method enum
+      SoftwareEncoder.php      # Software encoder enum
+
+  Support/
+    CommandBuilder.php         # ab-av1 command builder
+    Encoder.php                # Main encoder orchestrator
+    EncoderResult.php          # Encoding result wrapper
+    ProcessOutput.php          # Process output handler
 
   AV1Manager.php               # Main manager
   Facades/
@@ -233,5 +257,6 @@ The following v1.x features are removed in v2.0:
 ## Need Help?
 
 Check the new documentation:
+
 - [SIMPLIFIED_API.md](SIMPLIFIED_API.md) - Complete API reference
 - [examples/SimplifiedApiExamples.php](examples/SimplifiedApiExamples.php) - Usage examples

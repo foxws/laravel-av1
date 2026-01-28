@@ -53,6 +53,12 @@ it('can set video filter', function () {
     expect($encoder)->toBeInstanceOf(VideoEncoder::class);
 });
 
+it('can set number of threads', function () {
+    $encoder = (new VideoEncoder)->threads(8);
+
+    expect($encoder)->toBeInstanceOf(VideoEncoder::class);
+});
+
 it('can chain multiple options', function () {
     $encoder = (new VideoEncoder)
         ->crf(30)
