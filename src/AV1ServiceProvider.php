@@ -37,16 +37,7 @@ class AV1ServiceProvider extends PackageServiceProvider
         });
 
         $this->app->singleton('laravel-av1-configuration', function () {
-            $baseConfig = [
-                'binaries' => Config::get('av1.binaries'),
-                'timeout' => Config::integer('av1.timeout'),
-            ];
-
-            if ($configuredTemporaryRoot = Config::string('av1.temporary_files_root')) {
-                $baseConfig['temporary_directory'] = $configuredTemporaryRoot;
-            }
-
-            return $baseConfig;
+            return Config::get('av1');
         });
 
         $this->app->singleton(TemporaryDirectories::class, function () {
