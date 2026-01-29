@@ -5,7 +5,10 @@ declare(strict_types=1);
 namespace Foxws\AV1\AbAV1;
 
 use Foxws\AV1\Contracts\EncoderInterface;
+use Foxws\AV1\Filesystem\Media;
 use Foxws\AV1\Filesystem\TemporaryDirectories;
+use Foxws\AV1\Support\EncodingResult;
+use Foxws\AV1\Support\MediaExporter;
 use Illuminate\Process\Factory as ProcessFactory;
 use Illuminate\Process\ProcessResult;
 use Psr\Log\LoggerInterface;
@@ -19,6 +22,16 @@ class AbAV1Encoder implements EncoderInterface
     protected ?int $timeout;
 
     protected array $config;
+
+    protected ?Media $sourceMedia = null;
+
+    protected ?EncodingResult $result = null;
+
+    protected int $preset = 6;
+
+    protected float|int $minVmaf = 95;
+
+    protected int $maxEncodedPercent = 300;
 
     public function __construct(
         ?LoggerInterface $logger = null,
@@ -155,6 +168,96 @@ class AbAV1Encoder implements EncoderInterface
     }
 
     /**
+     * Set source media for encoding
+     */
+    public function setSourceMedia(?Media $media): self
+    {
+        $this->sourceMedia = $media;
+
+        return $this;
+    }
+
+    /**
+     * Set encoder preset
+     */
+    public function preset(int $preset): self
+    {
+        $this->preset = $preset;
+
+        return $this;
+    }
+
+    /**
+     * Set minimum VMAF score
+     */
+    public function minVmaf(float|int $vmaf): self
+    {
+        $this->minVmaf = $vmaf;
+
+        return $this;
+    }
+
+    /**
+     * Set maximum encoded percent
+     */
+    public function maxEncodedPercent(int $percent): self
+    {
+        $this->maxEncodedPercent = $percent;
+
+        return $this;
+    }
+
+    /**
+     * Encode using ab-av1 auto-encode
+     */
+    public function encode(?string $inputPath = null, ?string $outputPath = null): EncodingResult
+    {
+        // Use source media if no input provided
+        if ($inputPath === null) {
+            $inputPath = $this->sourceMedia?->getLocalPath()
+                ?? throw new \InvalidArgumentException('No input path or source media set. Use fromDisk()->open() first.');
+        }
+
+        // Generate temp output if not specified
+        if ($outputPath === null) {
+            $outputPath = storage_path('app/temp/'.uniqid('av1_').'.mp4');
+            $tempDir = dirname($outputPath);
+            if (! is_dir($tempDir)) {
+                mkdir($tempDir, 0755, true);
+            }
+        }
+
+        $preset = $this->preset ?? $this->config['preset'] ?? 6;
+        $minVmaf = $this->minVmaf ?? $this->config['min_vmaf'] ?? 95;
+        $maxEncodedPercent = $this->maxEncodedPercent ?? $this->config['max_encoded_percent'] ?? 300;
+
+        $builder = CommandBuilder::make('auto-encode')
+            ->input($inputPath)
+            ->output($outputPath)
+            ->preset((string) $preset)
+            ->minVmaf($minVmaf)
+            ->maxEncodedPercent($maxEncodedPercent);
+
+        $result = $this->run($builder->buildArray());
+
+        $this->result = new EncodingResult($result, $outputPath);
+
+        return $this->result;
+    }
+
+    /**
+     * Export encoding result (executes encode if not already done)
+     */
+    public function export(): MediaExporter
+    {
+        if ($this->result === null) {
+            $this->result = $this->encode();
+        }
+
+        return $this->result->export();
+    }
+
+    /**
      * Set command to auto-encode with defaults from configuration
      */
     public function vmafEncode(CommandBuilder $builder): self
@@ -211,9 +314,9 @@ class AbAV1Encoder implements EncoderInterface
     }
 
     /**
-     * Set command to encode
+     * Set command to encode (low-level builder configuration)
      */
-    public function encode(CommandBuilder $builder): self
+    public function withEncodeCommand(CommandBuilder $builder): self
     {
         $builder->command('encode');
 
