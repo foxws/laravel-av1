@@ -4,13 +4,11 @@ declare(strict_types=1);
 
 namespace Foxws\AV1;
 
+use Foxws\AV1\AbAV1\AbAV1Encoder;
 use Foxws\AV1\FFmpeg\VideoEncoder;
 use Foxws\AV1\Filesystem\Disk;
 use Foxws\AV1\Filesystem\Media;
 
-/**
- * Simplified media opener for v2.0 - clean disk abstraction
- */
 class MediaOpener
 {
     protected ?Media $sourceMedia = null;
@@ -74,31 +72,15 @@ class MediaOpener
     /**
      * Start ab-av1 encoding workflow
      */
-    public function abav1(): VideoEncoder
+    public function abav1(): AbAV1Encoder
     {
-        return $this->encoder();
+        return app(AbAV1Encoder::class);
     }
 
     /**
      * Start FFmpeg encoding workflow
      */
-    public function ffmpegEncode(): VideoEncoder
-    {
-        return $this->encoder();
-    }
-
-    /**
-     * Start FFmpeg auto CRF encoding workflow
-     */
-    public function ffmpegAutoEncode(): VideoEncoder
-    {
-        return $this->encoder();
-    }
-
-    /**
-     * Start VMAF encoding workflow (ab-av1)
-     */
-    public function vmafEncode(): VideoEncoder
+    public function ffmpeg(): VideoEncoder
     {
         return $this->encoder();
     }
