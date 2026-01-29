@@ -7,6 +7,7 @@ namespace Foxws\AV1;
 use Foxws\AV1\AbAV1\AbAV1Encoder;
 use Foxws\AV1\AbAV1\CrfFinder;
 use Foxws\AV1\FFmpeg\VideoEncoder;
+use Foxws\AV1\Filesystem\MediaOpenerFactory;
 use Foxws\AV1\Filesystem\TemporaryDirectories;
 use Illuminate\Support\Facades\Config;
 use Spatie\LaravelPackageTools\Package;
@@ -84,8 +85,13 @@ class AV1ServiceProvider extends PackageServiceProvider
             );
         });
 
-        $this->app->singleton('laravel-av1', function ($app) {
-            return new AV1Manager($app->make('laravel-av1-logger'));
+        // Register the main class to use with the facade
+        $this->app->singleton('laravel-av1', function () {
+            return new MediaOpenerFactory(
+                Config::string('filesystems.default'),
+                null,
+                fn () => app(VideoEncoder::class)
+            );
         });
     }
 }
