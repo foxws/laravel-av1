@@ -4,59 +4,74 @@ declare(strict_types=1);
 
 namespace Foxws\AV1\Filesystem;
 
-use Illuminate\Filesystem\Filesystem;
-
+/**
+ * Manages temporary directories for encoding operations
+ */
 class TemporaryDirectories
 {
-    /**
-     * Root of the temporary directories.
-     */
-    protected string $root;
+    protected string $basePath;
 
-    /**
-     * Array of all directories
-     */
-    protected array $directories = [];
-
-    /**
-     * Sets the root and removes the trailing slash.
-     */
-    public function __construct(string $root)
+    public function __construct(?string $basePath = null)
     {
-        $this->root = rtrim($root, '/');
+        $this->basePath = $basePath ?? sys_get_temp_dir();
     }
 
     /**
-     * Get the root temporary directory path.
-     */
-    public function getRoot(): string
-    {
-        return $this->root;
-    }
-
-    /**
-     * Returns the full path of a new temporary directory.
+     * Create a new temporary directory
      */
     public function create(): string
     {
-        $directory = $this->root.'/'.bin2hex(random_bytes(8));
+        $path = $this->basePath.'/av1_'.uniqid();
 
-        mkdir($directory, 0777, true);
+        if (! is_dir($path)) {
+            mkdir($path, 0755, true);
+        }
 
-        return $this->directories[] = $directory;
+        return $path;
     }
 
     /**
-     * Loop through all directories and delete them.
+     * Get the base path for temporary directories
      */
-    public function deleteAll(): void
+    public function getBasePath(): string
     {
-        $filesystem = new Filesystem;
+        return $this->basePath;
+    }
 
-        foreach ($this->directories as $directory) {
-            $filesystem->deleteDirectory($directory);
+    /**
+     * Clean up old temporary directories
+     */
+    public function cleanup(int $olderThanSeconds = 86400): void
+    {
+        $pattern = $this->basePath.'/av1_*';
+
+        foreach (glob($pattern) as $dir) {
+            if (! is_dir($dir)) {
+                continue;
+            }
+
+            if (filemtime($dir) < time() - $olderThanSeconds) {
+                $this->removeDirectory($dir);
+            }
+        }
+    }
+
+    /**
+     * Recursively remove a directory
+     */
+    protected function removeDirectory(string $dir): void
+    {
+        if (! is_dir($dir)) {
+            return;
         }
 
-        $this->directories = [];
+        $files = array_diff(scandir($dir), ['.', '..']);
+
+        foreach ($files as $file) {
+            $path = $dir.'/'.$file;
+            is_dir($path) ? $this->removeDirectory($path) : unlink($path);
+        }
+
+        rmdir($dir);
     }
 }

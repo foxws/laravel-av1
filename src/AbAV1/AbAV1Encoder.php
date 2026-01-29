@@ -2,13 +2,13 @@
 
 declare(strict_types=1);
 
-namespace Foxws\AV1\Support;
+namespace Foxws\AV1\AbAV1;
 
 use Foxws\AV1\Contracts\EncoderInterface;
 use Foxws\AV1\Filesystem\TemporaryDirectories;
+use Foxws\AV1\Support\CommandBuilder;
 use Illuminate\Process\Factory as ProcessFactory;
 use Illuminate\Process\ProcessResult;
-use Illuminate\Support\Facades\Config;
 use Psr\Log\LoggerInterface;
 
 class AbAV1Encoder implements EncoderInterface
@@ -19,13 +19,18 @@ class AbAV1Encoder implements EncoderInterface
 
     protected ?int $timeout;
 
+    protected array $config;
+
     public function __construct(
         ?LoggerInterface $logger = null,
-        ?int $timeout = null
+        ?string $binaryPath = null,
+        ?int $timeout = null,
+        ?array $config = null
     ) {
-        $this->binaryPath = Config::string('av1.binaries.ab-av1', 'ab-av1');
+        $this->binaryPath = $binaryPath ?? 'ab-av1';
         $this->logger = $logger;
-        $this->timeout = $timeout ?? Config::integer('av1.ab-av1.timeout', 3600);
+        $this->timeout = $timeout ?? 3600;
+        $this->config = $config ?? [];
     }
 
     public static function create(
@@ -148,5 +153,91 @@ class AbAV1Encoder implements EncoderInterface
     public function getVersion(): string
     {
         return $this->version();
+    }
+
+    /**
+     * Set command to auto-encode with defaults from configuration
+     */
+    public function vmafEncode(CommandBuilder $builder): self
+    {
+        $builder->command('auto-encode');
+
+        // Apply default configuration values
+        if (isset($this->config['preset'])) {
+            $builder->preset((string) $this->config['preset']);
+        }
+
+        if (isset($this->config['min_vmaf'])) {
+            $builder->minVmaf($this->config['min_vmaf']);
+        }
+
+        if (isset($this->config['max_encoded_percent'])) {
+            $builder->maxEncodedPercent($this->config['max_encoded_percent']);
+        }
+
+        return $this;
+    }
+
+    /**
+     * Set command to crf-search with defaults from configuration
+     */
+    public function crfSearch(CommandBuilder $builder): self
+    {
+        $builder->command('crf-search');
+
+        // Apply default configuration values
+        if (isset($this->config['preset'])) {
+            $builder->preset((string) $this->config['preset']);
+        }
+
+        if (isset($this->config['min_vmaf'])) {
+            $builder->minVmaf($this->config['min_vmaf']);
+        }
+
+        if (isset($this->config['max_encoded_percent'])) {
+            $builder->maxEncodedPercent($this->config['max_encoded_percent']);
+        }
+
+        return $this;
+    }
+
+    /**
+     * Set command to sample-encode
+     */
+    public function sampleEncode(CommandBuilder $builder): self
+    {
+        $builder->command('sample-encode');
+
+        return $this;
+    }
+
+    /**
+     * Set command to encode
+     */
+    public function encode(CommandBuilder $builder): self
+    {
+        $builder->command('encode');
+
+        return $this;
+    }
+
+    /**
+     * Set command to vmaf
+     */
+    public function vmaf(CommandBuilder $builder): self
+    {
+        $builder->command('vmaf');
+
+        return $this;
+    }
+
+    /**
+     * Set command to xpsnr
+     */
+    public function xpsnr(CommandBuilder $builder): self
+    {
+        $builder->command('xpsnr');
+
+        return $this;
     }
 }

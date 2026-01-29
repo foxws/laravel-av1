@@ -2,8 +2,9 @@
 
 declare(strict_types=1);
 
-use Foxws\AV1\Exporters\MediaExporter;
-use Foxws\AV1\Facades\AV1;
+use Foxws\AV1\EncodingResult;
+use Foxws\AV1\MediaExporter;
+use Illuminate\Process\ProcessResult;
 use Illuminate\Support\Facades\Storage;
 
 beforeEach(function () {
@@ -11,109 +12,136 @@ beforeEach(function () {
     Storage::fake('s3');
 });
 
-it('can export to local disk', function () {
-    $exporter = AV1::encode()
-        ->input(fixture('video.mp4'))
-        ->output('output.mp4')
-        ->crf(30)
-        ->export();
+it('can create media exporter instance', function () {
+    $processResult = \Mockery::mock(ProcessResult::class);
+    $processResult->shouldReceive('successful')->andReturn(true);
+
+    $result = new EncodingResult($processResult, '/tmp/output.mp4');
+    $exporter = $result->export();
 
     expect($exporter)->toBeInstanceOf(MediaExporter::class);
 });
 
-it('can specify target disk for export', function () {
-    $exporter = AV1::encode()
-        ->input(fixture('video.mp4'))
-        ->output('output.mp4')
-        ->crf(30)
-        ->export()
-        ->toDisk('s3');
+it('can chain toDisk and save', function () {
+    // Create actual temp file
+    $outputPath = storage_path('app/test-output.mp4');
+    file_put_contents($outputPath, 'test video content');
 
-    expect($exporter->getDisk()->getName())->toBe('s3');
+    $processResult = \Mockery::mock(ProcessResult::class);
+    $processResult->shouldReceive('successful')->andReturn(true);
+
+    $result = new EncodingResult($processResult, $outputPath);
+
+    $success = $result->export()
+        ->toDisk('s3')
+        ->save('encoded.mp4');
+
+    expect($success)->toBeTrue();
+    expect(Storage::disk('s3')->exists('encoded.mp4'))->toBeTrue();
+
+    @unlink($outputPath);
 });
 
-it('can specify path for export', function () {
-    $exporter = AV1::encode()
-        ->input(fixture('video.mp4'))
-        ->output('output.mp4')
-        ->crf(30)
-        ->export()
-        ->toPath('encoded/videos');
+it('can specify target path', function () {
+    $outputPath = storage_path('app/test-output.mp4');
+    file_put_contents($outputPath, 'test video content');
 
-    expect($exporter->getPath())->toContain('encoded/videos');
+    $processResult = \Mockery::mock(ProcessResult::class);
+    $processResult->shouldReceive('successful')->andReturn(true);
+
+    $result = new EncodingResult($processResult, $outputPath);
+
+    $success = $result->export()
+        ->toDisk('s3')
+        ->toPath('videos/encoded')
+        ->save('final.mp4');
+
+    expect($success)->toBeTrue();
+    expect(Storage::disk('s3')->exists('videos/encoded/final.mp4'))->toBeTrue();
+
+    @unlink($outputPath);
 });
 
-it('can set file visibility for export', function () {
-    $exporter = AV1::encode()
-        ->input(fixture('video.mp4'))
-        ->output('output.mp4')
-        ->crf(30)
-        ->export()
+it('can set file visibility', function () {
+    $outputPath = storage_path('app/test-output.mp4');
+    file_put_contents($outputPath, 'test video content');
+
+    $processResult = \Mockery::mock(ProcessResult::class);
+    $processResult->shouldReceive('successful')->andReturn(true);
+
+    $result = new EncodingResult($processResult, $outputPath);
+
+    $exporter = $result->export()
+        ->toDisk('local')
         ->withVisibility('public');
 
-    expect($exporter->getVisibility())->toBe('public');
+    $success = $exporter->save('public-video.mp4');
+
+    expect($success)->toBeTrue();
+    expect(Storage::disk('local')->exists('public-video.mp4'))->toBeTrue();
+
+    @unlink($outputPath);
 });
 
-it('can get command for export', function () {
-    $command = AV1::encode()
-        ->input(fixture('video.mp4'))
-        ->output('output.mp4')
-        ->crf(30)
-        ->preset('6')
-        ->export()
-        ->getCommand();
+it('returns encoding result from export', function () {
+    $outputPath = storage_path('app/test-output.mp4');
+    file_put_contents($outputPath, 'test video content');
 
-    expect($command)->toBeString();
-    expect($command)->toContain('ab-av1');
-    expect($command)->toContain('encode');
+    $processResult = \Mockery::mock(ProcessResult::class);
+    $processResult->shouldReceive('successful')->andReturn(true);
+
+    $result = new EncodingResult($processResult, $outputPath);
+
+    $exportResult = $result->export()->result();
+
+    expect($exportResult)->toBeInstanceOf(ProcessResult::class);
+
+    @unlink($outputPath);
 });
 
-it('can get builder from exporter', function () {
-    $builder = AV1::encode()
-        ->input(fixture('video.mp4'))
-        ->crf(30)
-        ->export()
-        ->getBuilder();
+it('can get source and target paths from exporter', function () {
+    $outputPath = storage_path('app/test-output.mp4');
+    file_put_contents($outputPath, 'test video content');
 
-    expect($builder)->not->toBeNull();
+    $processResult = \Mockery::mock(ProcessResult::class);
+    $processResult->shouldReceive('successful')->andReturn(true);
+
+    $result = new EncodingResult($processResult, $outputPath);
+
+    $exporter = $result->export()
+        ->toDisk('s3')
+        ->toPath('videos/encoded');
+
+    expect($exporter->getSourcePath())->toBe($outputPath);
+    expect($exporter->getDisk())->toBe('s3');
+    expect($exporter->getTargetPath())->toBe('videos/encoded');
+
+    @unlink($outputPath);
 });
 
-it('can get encoder from exporter', function () {
-    $encoder = AV1::encode()
-        ->input(fixture('video.mp4'))
-        ->crf(30)
-        ->export()
-        ->getEncoder();
+it('encoding result provides path access', function () {
+    $outputPath = storage_path('app/test-output.mp4');
 
-    expect($encoder)->not->toBeNull();
+    $processResult = \Mockery::mock(ProcessResult::class);
+
+    $result = new EncodingResult($processResult, $outputPath);
+
+    expect($result->path())->toBe($outputPath);
+    expect($result)->toBeInstanceOf(EncodingResult::class);
 });
 
-it('can chain path and disk methods', function () {
-    $exporter = AV1::encode()
-        ->input(fixture('video.mp4'))
-        ->output('output.mp4')
-        ->crf(30)
-        ->export()
-        ->toDisk('local')
-        ->toPath('encoded');
+it('returns false when exporting failed encoding', function () {
+    $outputPath = storage_path('app/test-output.mp4');
+    // Don't create file - simulates failed encoding
 
-    expect($exporter->getDisk()->getName())->toBe('local');
-    expect($exporter->getPath())->toContain('encoded');
-});
+    $processResult = \Mockery::mock(ProcessResult::class);
+    $processResult->shouldReceive('successful')->andReturn(false);
 
-it('can handle multiple export destinations', function () {
-    $exporter1 = AV1::encode()
-        ->input(fixture('video.mp4'))
-        ->crf(30)
-        ->export()
-        ->toDisk('local');
+    $result = new EncodingResult($processResult, $outputPath);
 
-    $exporter2 = AV1::encode()
-        ->input(fixture('video.mp4'))
-        ->crf(30)
-        ->export()
-        ->toDisk('s3');
+    $success = $result->export()
+        ->toDisk('s3')
+        ->save('encoded.mp4');
 
-    expect($exporter1->getDisk()->getName())->toBe('local');
-    expect($exporter2->getDisk()->getName())->toBe('s3');
+    expect($success)->toBeFalse();
 });

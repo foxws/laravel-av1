@@ -52,6 +52,54 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | FFmpeg Configuration
+    |--------------------------------------------------------------------------
+    |
+    | Configuration for direct FFmpeg AV1 encoding.
+    |
+    | timeout: Maximum time in seconds to wait for encoding (null for no timeout)
+    | threads: Number of threads to use (0 = auto-detect CPU cores)
+    | encoder: Default encoder (auto-detect if null)
+    |   - Hardware: av1_qsv (Intel), av1_amf (AMD), av1_nvenc (NVIDIA)
+    |   - Software: libsvtav1, libaom-av1, librav1e
+    | hardware_acceleration: Enable hardware acceleration for decoding/encoding
+    | hwaccel_priority: Priority order for hardware acceleration methods
+    |   - Available: qsv, cuda, vaapi, vulkan (lower index = higher priority)
+    | encoder_priority: Priority order for encoder selection
+    |   - Mix of hardware and software encoders (lower index = higher priority)
+    | default_crf: Default CRF value (quality, lower = better, 23-35 recommended)
+    | default_preset: Default preset (0-13 for svt-av1, varies by encoder)
+    | audio_codec: Default audio codec (libopus recommended for AV1)
+    | pixel_format: Default pixel format (yuv420p or yuv420p10le for 10-bit)
+    | auto_crf: Use ab-av1 to automatically find best CRF before encoding
+    |
+    */
+    'ffmpeg' => [
+        'timeout' => env('FFMPEG_TIMEOUT', 7200), // 2 hours
+        'threads' => env('FFMPEG_THREADS', 0), // 0 = auto-detect CPU cores
+        'encoder' => env('FFMPEG_ENCODER', null), // null = auto-detect
+        'hardware_acceleration' => env('FFMPEG_HARDWARE_ACCEL', true),
+        'hwaccel_priority' => ['qsv', 'cuda', 'vaapi', 'vulkan'], // Priority order for hardware acceleration methods
+        'hwaccel_device' => env('FFMPEG_HWACCEL_DEVICE', null), // Hardware device path (e.g., /dev/dri/renderD128 for VAAPI, null = auto-detect)
+        'encoder_priority' => [
+            // Hardware encoders (lower index = higher priority)
+            'av1_qsv',      // Intel Quick Sync Video
+            'av1_nvenc',    // NVIDIA NVENC
+            'av1_amf',      // AMD AMF
+            // Software encoders
+            'libsvtav1',    // SVT-AV1 (fastest, best quality/speed balance)
+            'libaom-av1',   // AOM AV1 (reference implementation)
+            'librav1e',     // rav1e (Rust implementation)
+        ],
+        'default_crf' => env('FFMPEG_DEFAULT_CRF', 30),
+        'default_preset' => env('FFMPEG_DEFAULT_PRESET', 6),
+        'audio_codec' => env('FFMPEG_AUDIO_CODEC', 'libopus'),
+        'pixel_format' => env('FFMPEG_PIXEL_FORMAT', 'yuv420p'),
+        'auto_crf' => env('FFMPEG_AUTO_CRF', false), // Use ab-av1 for CRF detection
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
     | Temporary Files Root
     |--------------------------------------------------------------------------
     |
