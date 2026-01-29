@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Foxws\AV1;
+namespace Foxws\AV1\Support;
 
 use Illuminate\Process\ProcessResult;
 

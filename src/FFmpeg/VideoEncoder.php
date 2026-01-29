@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace Foxws\AV1\FFmpeg;
 
-use Foxws\AV1\EncodingResult;
+use Foxws\AV1\Support\EncodingResult;
 use Foxws\AV1\Filesystem\Media;
-use Foxws\AV1\MediaExporter;
+use Foxws\AV1\Support\MediaExporter;
 use Illuminate\Process\Factory as ProcessFactory;
 use Psr\Log\LoggerInterface;
 

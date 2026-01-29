@@ -88,7 +88,7 @@ it('encode returns encoding result', function () {
 
     $result = $encoder->encode(fixture('video.mp4'), 'output.mp4');
 
-    expect($result)->toBeInstanceOf(\Foxws\AV1\EncodingResult::class);
+    expect($result)->toBeInstanceOf(\Foxws\AV1\Support\EncodingResult::class);
 });
 
 it('respects config defaults', function () {

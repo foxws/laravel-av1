@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-use Foxws\AV1\Support\CommandBuilder;
+use Foxws\AV1\AbAV1\CommandBuilder;
 
 it('throws when encode command missing input', function () {
     $builder = new CommandBuilder('encode');

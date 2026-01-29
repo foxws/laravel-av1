@@ -2,8 +2,8 @@
 
 declare(strict_types=1);
 
-use Foxws\AV1\EncodingResult;
-use Foxws\AV1\MediaExporter;
+use Foxws\AV1\Support\EncodingResult;
+use Foxws\AV1\Support\MediaExporter;
 use Illuminate\Process\ProcessResult;
 use Illuminate\Support\Facades\Storage;
 
