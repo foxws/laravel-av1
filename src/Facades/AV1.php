@@ -4,8 +4,6 @@ declare(strict_types=1);
 
 namespace Foxws\AV1\Facades;
 
-use Foxws\AV1\FFmpeg\VideoEncoder;
-use Foxws\AV1\MediaOpener;
 use Illuminate\Support\Facades\Facade;
 
 /**
