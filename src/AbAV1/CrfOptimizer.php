@@ -13,6 +13,7 @@ use Psr\Log\LoggerInterface;
 class CrfOptimizer
 {
     protected AbAV1Encoder $abav1Encoder;
+
     protected ?LoggerInterface $logger;
 
     public function __construct(
