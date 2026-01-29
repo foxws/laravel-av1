@@ -21,6 +21,14 @@ class AV1Manager
     }
 
     /**
+     * Create a media opener instance
+     */
+    public function opener(): MediaOpener
+    {
+        return app(MediaOpener::class);
+    }
+
+    /**
      * Create a video encoder instance
      */
     public function encoder(): VideoEncoder

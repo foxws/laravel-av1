@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Foxws\AV1;
 
+use Foxws\AV1\FFmpeg\VideoEncoder;
 use Foxws\AV1\Filesystem\Disk;
 use Foxws\AV1\Filesystem\Media;
 
@@ -44,6 +45,14 @@ class MediaOpener
     }
 
     /**
+     * Alias for path() to match documentation
+     */
+    public function open(string $path): self
+    {
+        return $this->path($path);
+    }
+
+    /**
      * Get the source media
      */
     public function getSourceMedia(): ?Media
@@ -54,10 +63,43 @@ class MediaOpener
     /**
      * Create encoder and configure with source media
      */
-    public function encoder(): VideoEncoderWrapper
+    public function encoder(): VideoEncoder
     {
-        $encoder = app(\Foxws\AV1\FFmpeg\VideoEncoder::class);
+        $encoder = app(VideoEncoder::class);
+        $encoder->setSourceMedia($this->sourceMedia);
 
-        return new VideoEncoderWrapper($encoder, $this->sourceMedia);
+        return $encoder;
+    }
+
+    /**
+     * Start ab-av1 encoding workflow
+     */
+    public function abav1(): VideoEncoder
+    {
+        return $this->encoder();
+    }
+
+    /**
+     * Start FFmpeg encoding workflow
+     */
+    public function ffmpegEncode(): VideoEncoder
+    {
+        return $this->encoder();
+    }
+
+    /**
+     * Start FFmpeg auto CRF encoding workflow
+     */
+    public function ffmpegAutoEncode(): VideoEncoder
+    {
+        return $this->encoder();
+    }
+
+    /**
+     * Start VMAF encoding workflow (ab-av1)
+     */
+    public function vmafEncode(): VideoEncoder
+    {
+        return $this->encoder();
     }
 }

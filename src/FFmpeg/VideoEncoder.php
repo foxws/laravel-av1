@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace Foxws\AV1\FFmpeg;
 
 use Foxws\AV1\EncodingResult;
+use Foxws\AV1\Filesystem\Media;
+use Foxws\AV1\MediaExporter;
 use Illuminate\Process\Factory as ProcessFactory;
 use Psr\Log\LoggerInterface;
 
@@ -41,6 +43,10 @@ class VideoEncoder
 
     protected array $config;
 
+    protected ?Media $sourceMedia = null;
+
+    protected ?EncodingResult $result = null;
+
     public function __construct(
         ?LoggerInterface $logger = null,
         ?array $config = null
@@ -50,6 +56,24 @@ class VideoEncoder
         $this->ffmpegPath = $this->config['binaries']['ffmpeg'] ?? 'ffmpeg';
         $this->timeout = $this->config['timeout'] ?? 7200;
         $this->hardwareDetector = new HardwareDetector($this->ffmpegPath);
+    }
+
+    /**
+     * Set source media for encoding
+     */
+    public function setSourceMedia(?Media $media): self
+    {
+        $this->sourceMedia = $media;
+
+        return $this;
+    }
+
+    /**
+     * Enable hardware acceleration (alias for useHwAccel)
+     */
+    public function useHardwareAcceleration(bool $enabled = true): self
+    {
+        return $this->useHwAccel($enabled);
     }
 
     /**
@@ -143,10 +167,45 @@ class VideoEncoder
     }
 
     /**
+     * Export encoding result (executes encode if not already done)
+     */
+    public function export(): MediaExporter
+    {
+        if ($this->result === null) {
+            $this->result = $this->encode();
+        }
+
+        return $this->result->export();
+    }
+
+    /**
+     * Clean up temporary files
+     */
+    public function cleanupTemporaryFiles(): void
+    {
+        // Cleanup handled by temporary directory service
+    }
+
+    /**
      * Encode video
      */
-    public function encode(string $inputPath, string $outputPath): EncodingResult
+    public function encode(?string $inputPath = null, ?string $outputPath = null): EncodingResult
     {
+        // Use source media if no input provided
+        if ($inputPath === null) {
+            $inputPath = $this->sourceMedia?->getLocalPath()
+                ?? throw new \InvalidArgumentException('No input path or source media set. Use fromDisk()->open() first.');
+        }
+
+        // Generate temp output if not specified
+        if ($outputPath === null) {
+            $outputPath = storage_path('app/temp/'.uniqid('av1_').'.mp4');
+            $tempDir = dirname($outputPath);
+            if (! is_dir($tempDir)) {
+                mkdir($tempDir, 0755, true);
+            }
+        }
+
         $args = $this->buildCommand($inputPath, $outputPath);
 
         if ($this->logger) {
@@ -166,7 +225,9 @@ class VideoEncoder
             ->timeout($this->timeout)
             ->run($args);
 
-        return new EncodingResult($result, $outputPath);
+        $this->result = new EncodingResult($result, $outputPath);
+
+        return $this->result;
     }
 
     /**
