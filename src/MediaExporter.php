@@ -71,12 +71,23 @@ class MediaExporter
         // Determine final path
         $finalPath = $this->resolveFinalPath($filename);
 
-        // Copy to target disk
-        $success = Storage::disk($this->disk)->put(
-            $finalPath,
-            file_get_contents($this->sourcePath),
-            $this->visibility
-        );
+        // Copy to target disk using streaming for large files
+        $stream = fopen($this->sourcePath, 'rb');
+        if (! $stream) {
+            return false;
+        }
+
+        try {
+            $success = Storage::disk($this->disk)->put(
+                $finalPath,
+                $stream,
+                $this->visibility
+            );
+        } finally {
+            if (is_resource($stream)) {
+                fclose($stream);
+            }
+        }
 
         // Optionally clean up source file
         // @unlink($this->sourcePath);

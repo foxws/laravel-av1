@@ -8,7 +8,6 @@ use Foxws\AV1\FFmpeg\Enums\HardwareAccelMethod;
 use Foxws\AV1\FFmpeg\Enums\HardwareEncoder;
 use Foxws\AV1\FFmpeg\Enums\SoftwareEncoder;
 use Illuminate\Process\Factory as ProcessFactory;
-use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Config;
 
 /**
@@ -31,38 +30,36 @@ class HardwareDetector
      */
     public function getAvailableEncoders(): array
     {
-        return Cache::remember('av1.available_encoders', 3600, function () {
-            $available = [];
+        $available = [];
 
-            $encoders = $this->listFFmpegEncoders();
-            $priorityList = Config::get('av1.ffmpeg.encoder_priority', []);
+        $encoders = $this->listFFmpegEncoders();
+        $priorityList = Config::get('av1.ffmpeg.encoder_priority', []);
 
-            // Check hardware encoders
-            foreach (HardwareEncoder::cases() as $encoder) {
-                if (in_array($encoder->value, $encoders)) {
-                    $priority = array_search($encoder->value, $priorityList);
-                    $available[$encoder->value] = [
-                        'name' => $encoder->label(),
-                        'type' => 'hardware',
-                        'priority' => $priority !== false ? $priority : 999,
-                    ];
-                }
+        // Check hardware encoders
+        foreach (HardwareEncoder::cases() as $encoder) {
+            if (in_array($encoder->value, $encoders)) {
+                $priority = array_search($encoder->value, $priorityList);
+                $available[$encoder->value] = [
+                    'name' => $encoder->label(),
+                    'type' => 'hardware',
+                    'priority' => $priority !== false ? $priority : 999,
+                ];
             }
+        }
 
-            // Check software encoders
-            foreach (SoftwareEncoder::cases() as $encoder) {
-                if (in_array($encoder->value, $encoders)) {
-                    $priority = array_search($encoder->value, $priorityList);
-                    $available[$encoder->value] = [
-                        'name' => $encoder->label(),
-                        'type' => 'software',
-                        'priority' => $priority !== false ? $priority : 999,
-                    ];
-                }
+        // Check software encoders
+        foreach (SoftwareEncoder::cases() as $encoder) {
+            if (in_array($encoder->value, $encoders)) {
+                $priority = array_search($encoder->value, $priorityList);
+                $available[$encoder->value] = [
+                    'name' => $encoder->label(),
+                    'type' => 'software',
+                    'priority' => $priority !== false ? $priority : 999,
+                ];
             }
+        }
 
-            return $available;
-        });
+        return $available;
     }
 
     /**
@@ -192,14 +189,6 @@ class HardwareDetector
         }
 
         return null;
-    }
-
-    /**
-     * Clear the encoder cache
-     */
-    public function clearCache(): void
-    {
-        Cache::forget('av1.available_encoders');
     }
 
     /**

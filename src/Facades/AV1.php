@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Foxws\AV1\Facades;
 
-use Foxws\AV1\MediaOpener;
 use Illuminate\Support\Facades\Facade;
 
 /**
@@ -20,21 +19,5 @@ class AV1 extends Facade
     protected static function getFacadeAccessor(): string
     {
         return \Foxws\AV1\AV1Manager::class;
-    }
-
-    /**
-     * Create a media opener from a disk
-     */
-    public static function fromDisk(string $disk): MediaOpener
-    {
-        return static::getFacadeRoot()->opener()->fromDisk($disk);
-    }
-
-    /**
-     * Open a media file from a path (local or remote)
-     */
-    public static function open(string $path): MediaOpener
-    {
-        return static::getFacadeRoot()->opener()->path($path);
     }
 }
