@@ -47,6 +47,8 @@ class VideoEncoder
 
     protected ?EncodingResult $result = null;
 
+    protected float|int|null $targetVmaf = null;
+
     public function __construct(
         ?LoggerInterface $logger = null,
         ?array $config = null
@@ -74,6 +76,16 @@ class VideoEncoder
     public function useHardwareAcceleration(bool $enabled = true): self
     {
         return $this->useHwAccel($enabled);
+    }
+
+    /**
+     * Set target VMAF score for auto CRF encoding
+     */
+    public function targetVmaf(float|int $vmaf): self
+    {
+        $this->targetVmaf = $vmaf;
+
+        return $this;
     }
 
     /**
