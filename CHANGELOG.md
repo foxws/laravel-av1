@@ -2,6 +2,14 @@
 
 All notable changes to `laravel-av1` will be documented in this file.
 
+## 0.5.0 - 2026-01-29
+
+### What's Changed
+
+* feat: Implement AV1 encoding support with FFmpeg by @francoism90 in https://github.com/foxws/laravel-av1/pull/3
+
+**Full Changelog**: https://github.com/foxws/laravel-av1/compare/0.4.0...0.5.0
+
 ## 0.3.0 - 2026-01-26
 
 ### What's Changed
