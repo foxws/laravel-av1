@@ -4,8 +4,6 @@ declare(strict_types=1);
 
 namespace Foxws\AV1;
 
-use Foxws\AV1\AbAV1\AbAV1Encoder;
-use Foxws\AV1\AbAV1\CrfFinder;
 use Foxws\AV1\FFmpeg\VideoEncoder;
 use Foxws\AV1\Filesystem\MediaOpenerFactory;
 use Foxws\AV1\Filesystem\TemporaryDirectories;
@@ -39,50 +37,30 @@ class AV1ServiceProvider extends PackageServiceProvider
         });
 
         $this->app->singleton('laravel-av1-configuration', function () {
-            return Config::get('av1');
+            $baseConfig = [
+                'binaries' => Config::get('av1.binaries'),
+                'timeout' => Config::integer('av1.timeout'),
+            ];
+
+            if ($configuredTemporaryRoot = Config::string('av1.temporary_files_root')) {
+                $baseConfig['temporary_directory'] = $configuredTemporaryRoot;
+            }
+
+            return $baseConfig;
         });
 
         $this->app->singleton(TemporaryDirectories::class, function () {
             return new TemporaryDirectories(
-                config('av1.temporary_files_root', sys_get_temp_dir()),
+                Config::string('av1.temporary_files_root', sys_get_temp_dir())
             );
         });
 
-        $this->app->bind(AbAV1Encoder::class, function ($app) {
+        // Register the Video Encoder
+        $this->app->singleton(VideoEncoder::class, function ($app) {
             $logger = $app->make('laravel-av1-logger');
             $config = $app->make('laravel-av1-configuration');
 
-            return new AbAV1Encoder(
-                logger: $logger,
-                binaryPath: $config['binaries']['ab-av1'] ?? 'ab-av1',
-                timeout: $config['ab-av1']['timeout'] ?? 3600,
-                config: $config['ab-av1'] ?? []
-            );
-        });
-
-        $this->app->bind(CrfFinder::class, function ($app) {
-            $logger = $app->make('laravel-av1-logger');
-            $config = $app->make('laravel-av1-configuration');
-
-            return new CrfFinder(
-                logger: $logger,
-                binaryPath: $config['binaries']['ab-av1'] ?? 'ab-av1',
-                timeout: $config['ab-av1']['timeout'] ?? 14400,
-                defaultCrf: $config['ffmpeg']['default_crf'] ?? 30
-            );
-        });
-
-        $this->app->bind(VideoEncoder::class, function ($app) {
-            $logger = $app->make('laravel-av1-logger');
-            $config = $app->make('laravel-av1-configuration');
-
-            return new VideoEncoder(
-                logger: $logger,
-                config: array_merge(
-                    ['binaries' => $config['binaries'] ?? []],
-                    $config['ffmpeg'] ?? []
-                )
-            );
+            return new VideoEncoder($logger, $config);
         });
 
         // Register the main class to use with the facade

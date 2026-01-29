@@ -4,30 +4,41 @@ declare(strict_types=1);
 
 namespace Foxws\AV1\Filesystem;
 
+use Illuminate\Filesystem\Filesystem;
+
 /**
  * Manages temporary directories for encoding operations
  */
 class TemporaryDirectories
 {
-    protected string $basePath;
+    /**
+     * Root of the temporary directories.
+     */
+    protected string $root;
 
-    public function __construct(?string $basePath = null)
+    /**
+     * Array of all directories
+     */
+    protected array $directories = [];
+
+    /**
+     * Sets the root and removes the trailing slash.
+     */
+    public function __construct(string $root)
     {
-        $this->basePath = $basePath ?? sys_get_temp_dir();
+        $this->root = rtrim($root, '/');
     }
 
     /**
-     * Create a new temporary directory
+     * Returns the full path a of new temporary directory.
      */
     public function create(): string
     {
-        $path = $this->basePath.'/av1_'.uniqid();
+        $directory = $this->root.'/'.bin2hex(random_bytes(8));
 
-        if (! is_dir($path)) {
-            mkdir($path, 0755, true);
-        }
+        mkdir($directory, 0777, true);
 
-        return $path;
+        return $this->directories[] = $directory;
     }
 
     /**
@@ -35,7 +46,21 @@ class TemporaryDirectories
      */
     public function getBasePath(): string
     {
-        return $this->basePath;
+        return $this->root;
+    }
+
+    /**
+     * Loop through all directories and delete them.
+     */
+    public function deleteAll(): void
+    {
+        $filesystem = new Filesystem;
+
+        foreach ($this->directories as $directory) {
+            $filesystem->deleteDirectory($directory);
+        }
+
+        $this->directories = [];
     }
 
     /**
@@ -43,7 +68,7 @@ class TemporaryDirectories
      */
     public function cleanup(int $olderThanSeconds = 86400): void
     {
-        $pattern = $this->basePath.'/av1_*';
+        $pattern = $this->root.'/av1_*';
 
         foreach (glob($pattern) as $dir) {
             if (! is_dir($dir)) {

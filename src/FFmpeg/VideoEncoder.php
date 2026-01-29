@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Foxws\AV1\FFmpeg;
 
 use Foxws\AV1\Filesystem\Media;
+use Foxws\AV1\Filesystem\MediaCollection;
 use Foxws\AV1\Support\EncodingResult;
 use Foxws\AV1\Support\MediaExporter;
 use Illuminate\Process\Factory as ProcessFactory;
@@ -27,9 +28,9 @@ class VideoEncoder
 
     protected ?string $encoder = null;
 
-    protected int $crf;
+    protected ?int $crf = null;
 
-    protected int $preset;
+    protected ?int $preset = null;
 
     protected ?string $pixelFormat = null;
 
@@ -44,6 +45,8 @@ class VideoEncoder
     protected array $config;
 
     protected ?Media $sourceMedia = null;
+
+    protected ?MediaCollection $collection = null;
 
     protected ?EncodingResult $result = null;
 
@@ -61,6 +64,29 @@ class VideoEncoder
     }
 
     /**
+     * Create a fresh instance with reset state
+     */
+    public function fresh(): self
+    {
+        return new self($this->logger, $this->config);
+    }
+
+    /**
+     * Open a media collection for encoding
+     */
+    public function open(MediaCollection $collection): self
+    {
+        $this->collection = $collection;
+
+        // Set first media as source for single-file encoding
+        if ($collection->count() > 0) {
+            $this->sourceMedia = $collection->first();
+        }
+
+        return $this;
+    }
+
+    /**
      * Set source media for encoding
      */
     public function setSourceMedia(?Media $media): self
@@ -68,6 +94,14 @@ class VideoEncoder
         $this->sourceMedia = $media;
 
         return $this;
+    }
+
+    /**
+     * Get the media collection
+     */
+    public function getCollection(): ?MediaCollection
+    {
+        return $this->collection;
     }
 
     /**

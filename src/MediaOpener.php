@@ -4,84 +4,130 @@ declare(strict_types=1);
 
 namespace Foxws\AV1;
 
-use Foxws\AV1\AbAV1\AbAV1Encoder;
 use Foxws\AV1\FFmpeg\VideoEncoder;
 use Foxws\AV1\Filesystem\Disk;
 use Foxws\AV1\Filesystem\Media;
+use Foxws\AV1\Filesystem\MediaCollection;
+use Foxws\AV1\Filesystem\TemporaryDirectories;
+use Illuminate\Contracts\Filesystem\Filesystem;
+use Illuminate\Filesystem\FilesystemManager;
+use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Arr;
+use Illuminate\Support\Facades\Config;
+use Illuminate\Support\Traits\ForwardsCalls;
 
 class MediaOpener
 {
-    protected ?Media $sourceMedia = null;
-
-    /**
-     * Open media from a disk
-     */
-    public function fromDisk(string $disk): self
-    {
-        $this->sourceMedia = null;
-        $this->disk = new Disk($disk);
-
-        return $this;
-    }
+    use ForwardsCalls;
 
     protected ?Disk $disk = null;
 
-    protected ?string $path = null;
+    protected ?VideoEncoder $encoder = null;
+
+    protected ?MediaCollection $collection = null;
+
+    public function __construct(
+        Disk|string|null $disk = null,
+        ?VideoEncoder $encoder = null,
+        ?MediaCollection $mediaCollection = null
+    ) {
+        $this->fromDisk($disk ?: Config::string('filesystems.default'));
+
+        $this->encoder = $encoder ?: app(VideoEncoder::class)->fresh();
+
+        $this->collection = $mediaCollection ?: new MediaCollection;
+    }
+
+    public function clone(): self
+    {
+        return new MediaOpener(
+            $this->disk,
+            $this->encoder,
+            $this->collection
+        );
+    }
+
+    public function fromDisk(Disk|Filesystem|string $disk): self
+    {
+        $this->disk = Disk::make($disk);
+
+        return $this;
+    }
+
+    public function getDisk(): ?Disk
+    {
+        return $this->disk;
+    }
+
+    protected static function makeLocalDiskFromPath(string $path): Disk
+    {
+        $adapter = (new FilesystemManager(app()))->createLocalDriver([
+            'root' => $path,
+        ]);
+
+        return Disk::make($adapter);
+    }
 
     /**
-     * Set the path on the disk
+     * Instantiates a Media object for each given path.
      */
-    public function path(string $path): self
+    public function open($paths): self
     {
-        $this->path = $path;
+        foreach (Arr::wrap($paths) as $path) {
+            if ($path instanceof UploadedFile) {
+                $disk = static::makeLocalDiskFromPath($path->getPath());
 
-        if ($this->disk) {
-            $this->sourceMedia = new Media($this->disk, $path);
+                $media = Media::make($disk, $path->getFilename());
+            } else {
+                $media = Media::make($this->disk, $path);
+            }
+
+            $this->collection->push($media);
         }
+
+        // Initialize the encoder with the collection
+        $this->encoder->open($this->collection);
 
         return $this;
     }
 
     /**
-     * Alias for path() to match documentation
+     * Open files from a specific disk
      */
-    public function open(string $path): self
+    public function openFromDisk(Filesystem|string $disk, $paths): self
     {
-        return $this->path($path);
+        return $this->fromDisk($disk)->open($paths);
+    }
+
+    public function get(): MediaCollection
+    {
+        return $this->collection;
+    }
+
+    public function getEncoder(): VideoEncoder
+    {
+        return $this->encoder;
     }
 
     /**
-     * Get the source media
+     * Returns an instance of MediaExporter with the encoder.
      */
-    public function getSourceMedia(): ?Media
+    public function export(): MediaExporter
     {
-        return $this->sourceMedia;
+        return new MediaExporter($this->encoder);
     }
 
-    /**
-     * Create encoder and configure with source media
-     */
-    public function encoder(): VideoEncoder
+    public function cleanupTemporaryFiles(): self
     {
-        $encoder = app(VideoEncoder::class);
-        $encoder->setSourceMedia($this->sourceMedia);
+        app(TemporaryDirectories::class)->deleteAll();
 
-        return $encoder;
+        return $this;
     }
 
-    /**
-     * Start ab-av1 encoding workflow
-     */
-    public function abav1(): AbAV1Encoder
+    public function __call($method, $arguments)
     {
-        return app(AbAV1Encoder::class);
-    }
+        $result = $this->forwardCallTo($encoder = $this->getEncoder(), $method, $arguments);
 
-    /**
-     * Start FFmpeg encoding workflow
-     */
-    public function ffmpeg(): VideoEncoder
-    {
-        return $this->encoder();
+        return ($result === $encoder) ? $this : $result;
     }
 }

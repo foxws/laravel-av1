@@ -4,56 +4,56 @@ declare(strict_types=1);
 
 namespace Foxws\AV1\Filesystem;
 
+use Closure;
 use Foxws\AV1\FFmpeg\VideoEncoder;
 use Foxws\AV1\MediaOpener;
+use Illuminate\Support\Traits\ForwardsCalls;
 
 class MediaOpenerFactory
 {
-    protected string $defaultDisk;
+    use ForwardsCalls;
 
-    protected ?string $defaultPath;
+    protected ?string $defaultDisk = null;
 
-    protected \Closure $encoderResolver;
+    protected ?VideoEncoder $encoder = null;
+
+    protected ?Closure $encoderResolver = null;
 
     public function __construct(
-        string $defaultDisk = 'local',
-        ?string $defaultPath = null,
-        ?\Closure $encoderResolver = null
+        ?string $defaultDisk = null,
+        ?VideoEncoder $encoder = null,
+        ?Closure $encoderResolver = null
     ) {
         $this->defaultDisk = $defaultDisk;
-        $this->defaultPath = $defaultPath;
-        $this->encoderResolver = $encoderResolver ?? fn () => app(VideoEncoder::class);
+        $this->encoder = $encoder;
+        $this->encoderResolver = $encoderResolver;
+    }
+
+    protected function encoder(): VideoEncoder
+    {
+        if ($this->encoder) {
+            return $this->encoder;
+        }
+
+        $resolver = $this->encoderResolver;
+
+        return $this->encoder = $resolver();
+    }
+
+    public function new(): MediaOpener
+    {
+        return new MediaOpener($this->defaultDisk, $this->encoder());
     }
 
     /**
-     * Create a media opener from a disk
+     * Handle dynamic method calls into AV1.
+     *
+     * @param  string  $method
+     * @param  array  $parameters
+     * @return mixed
      */
-    public function fromDisk(string $disk): MediaOpener
+    public function __call($method, $parameters)
     {
-        return app(MediaOpener::class)->fromDisk($disk);
-    }
-
-    /**
-     * Open a media file from a path
-     */
-    public function open(string $path): MediaOpener
-    {
-        return app(MediaOpener::class)->path($path);
-    }
-
-    /**
-     * Create a media opener from the default disk
-     */
-    public function disk(?string $disk = null): MediaOpener
-    {
-        return $this->fromDisk($disk ?? $this->defaultDisk);
-    }
-
-    /**
-     * Create a video encoder instance
-     */
-    public function encoder(): VideoEncoder
-    {
-        return ($this->encoderResolver)();
+        return $this->forwardCallTo($this->new(), $method, $parameters);
     }
 }

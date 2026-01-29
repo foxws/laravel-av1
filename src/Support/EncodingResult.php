@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Foxws\AV1\Support;
 
+use Foxws\AV1\Filesystem\Disk;
 use Illuminate\Process\ProcessResult;
 
 /**
@@ -19,6 +20,43 @@ class EncodingResult
     {
         $this->result = $result;
         $this->outputPath = $outputPath;
+    }
+
+    /**
+     * Copy the encoded file to a target disk
+     */
+    public function toDisk(Disk $disk, ?string $visibility = null, bool $cleanup = true, ?string $targetPath = null): void
+    {
+        if (! file_exists($this->outputPath)) {
+            throw new \RuntimeException('Output file does not exist: '.$this->outputPath);
+        }
+
+        $filename = basename($this->outputPath);
+        $finalPath = $targetPath ? rtrim($targetPath, '/').'/'.$filename : $filename;
+
+        // Read the file and put it on the target disk
+        $stream = fopen($this->outputPath, 'rb');
+
+        if (! $stream) {
+            throw new \RuntimeException('Failed to open output file: '.$this->outputPath);
+        }
+
+        try {
+            if ($visibility) {
+                $disk->put($finalPath, $stream, $visibility);
+            } else {
+                $disk->put($finalPath, $stream);
+            }
+        } finally {
+            if (is_resource($stream)) {
+                fclose($stream);
+            }
+        }
+
+        // Cleanup temporary file if requested
+        if ($cleanup && file_exists($this->outputPath)) {
+            @unlink($this->outputPath);
+        }
     }
 
     /**

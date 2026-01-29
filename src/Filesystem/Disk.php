@@ -4,124 +4,152 @@ declare(strict_types=1);
 
 namespace Foxws\AV1\Filesystem;
 
+use Illuminate\Contracts\Filesystem\Filesystem;
+use Illuminate\Filesystem\FilesystemAdapter;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Traits\ForwardsCalls;
+use League\Flysystem\FilesystemAdapter as FlysystemFilesystemAdapter;
+use League\Flysystem\Local\LocalFilesystemAdapter;
 
 /**
- * Simplified disk wrapper for media files
- *
  * @method bool has(string $path)
  * @method bool exists(string $path)
  * @method string|null get(string $path)
  * @method bool put(string $path, string|resource $contents, mixed $options = [])
  * @method resource|null readStream(string $path)
  * @method bool writeStream(string $path, resource $resource, array $options = [])
- * @method bool delete(string|array $paths)
- * @method bool copy(string $from, string $to)
- * @method bool move(string $from, string $to)
- * @method int size(string $path)
- * @method int lastModified(string $path)
- * @method string path(string $path)
- * @method array files(string|null $directory = null, bool $recursive = false)
- * @method array allFiles(string|null $directory = null)
- * @method array directories(string|null $directory = null, bool $recursive = false)
- * @method array allDirectories(string|null $directory = null)
  * @method bool makeDirectory(string $path)
- * @method bool deleteDirectory(string $directory)
+ * @method bool setVisibility(string $path, string $visibility)
+ * @method array allFiles(string|null $directory = null)
  */
 class Disk
 {
     use ForwardsCalls;
 
-    protected string $name;
+    protected Filesystem|string $disk;
 
-    public function __construct(string $name)
+    protected ?string $temporaryDirectory = null;
+
+    protected ?FilesystemAdapter $filesystemAdapter = null;
+
+    public function __construct(Filesystem|string $disk)
     {
-        $this->name = $name;
+        $this->disk = $disk;
+    }
+
+    public static function make(mixed $disk): self
+    {
+        if ($disk instanceof self) {
+            return $disk;
+        }
+
+        return new self($disk);
+    }
+
+    public static function makeTemporaryDisk(): self
+    {
+        $filesystemAdapter = app('filesystem')->createLocalDriver([
+            'root' => app(TemporaryDirectories::class)->create(),
+        ]);
+
+        return new self($filesystemAdapter);
     }
 
     /**
-     * Get file path for local disk or download to temp for remote disks
+     * Creates a fresh instance, mostly used to force a new TemporaryDirectory.
      */
-    public function getPath(string $path): string
+    public function clone(): self
     {
-        // Try to get local path, fallback to download for remote disks
-        try {
-            $localPath = $this->path($path);
-
-            // Verify it's actually a local file
-            if (file_exists($localPath)) {
-                return $localPath;
-            }
-        } catch (\RuntimeException $e) {
-            // Remote disk - will download to temp
-        }
-
-        // For remote disks (S3, etc), download to temp
-        return $this->downloadToTemp($path);
+        return new Disk($this->disk);
     }
 
     /**
-     * Download file to temporary location using streaming for memory efficiency
+     * Creates a new TemporaryDirectory instance if none is set, otherwise
+     * it returns the current one.
      */
-    protected function downloadToTemp(string $path): string
+    public function getTemporaryDirectory(): string
     {
-        $tempPath = storage_path('app/temp/'.uniqid('av1_').'_'.basename($path));
-        $tempDir = dirname($tempPath);
-
-        if (! is_dir($tempDir)) {
-            mkdir($tempDir, 0755, true);
+        if ($this->temporaryDirectory) {
+            return $this->temporaryDirectory;
         }
 
-        // Use streaming for memory efficiency with large video files
-        $stream = $this->readStream($path);
+        return $this->temporaryDirectory = app(TemporaryDirectories::class)->create();
+    }
 
-        if (! $stream) {
-            throw new \RuntimeException("Failed to read stream for: {$path}");
-        }
-
-        $localStream = fopen($tempPath, 'wb');
-
-        if (! $localStream) {
-            if (is_resource($stream)) {
-                fclose($stream);
-            }
-            throw new \RuntimeException("Failed to create local file: {$tempPath}");
-        }
-
-        // Stream copy in chunks for memory efficiency
-        stream_copy_to_stream($stream, $localStream);
-
-        fclose($localStream);
-
-        if (is_resource($stream)) {
-            fclose($stream);
-        }
-
-        return $tempPath;
+    public function makeMedia(string $path): Media
+    {
+        return Media::make($this, $path);
     }
 
     /**
-     * Get disk name
+     * Returns the name of the disk. It generates a name if the disk
+     * is an instance of Flysystem.
      */
     public function getName(): string
     {
-        return $this->name;
+        if (is_string($this->disk)) {
+            return $this->disk;
+        }
+
+        return get_class($this->getFlysystemAdapter()).'_'.md5((string) spl_object_id($this->getFlysystemAdapter()));
     }
 
     /**
-     * Get underlying storage instance
+     * @return FilesystemAdapter
      */
-    public function storage(): \Illuminate\Contracts\Filesystem\Filesystem
+    public function getFilesystemAdapter(): Filesystem|FilesystemAdapter
     {
-        return Storage::disk($this->name);
+        if ($this->filesystemAdapter) {
+            return $this->filesystemAdapter;
+        }
+
+        if ($this->disk instanceof Filesystem) {
+            /** @var FilesystemAdapter $adapter */
+            $adapter = $this->disk;
+
+            return $this->filesystemAdapter = $adapter;
+        }
+
+        return $this->filesystemAdapter = Storage::disk($this->disk);
     }
 
     /**
-     * Forward calls to the underlying Storage instance
+     * @phpstan-return FlysystemFilesystemAdapter
+     */
+    private function getFlysystemAdapter(): FlysystemFilesystemAdapter
+    {
+        return $this->getFilesystemAdapter()->getAdapter();
+    }
+
+    public function isLocalDisk(): bool
+    {
+        return $this->getFlysystemAdapter() instanceof LocalFilesystemAdapter;
+    }
+
+    /**
+     * Replaces backward slashes into forward slashes.
+     */
+    public static function normalizePath(string $path): string
+    {
+        return str_replace('\\', '/', $path);
+    }
+
+    /**
+     * Get the full path for the file at the given "short" path.
+     */
+    public function path(string $path): string
+    {
+        $path = $this->getFilesystemAdapter()->path($path);
+
+        return $this->isLocalDisk() ? static::normalizePath($path) : $path;
+    }
+
+    /**
+     * Forwards all calls to Laravel's FilesystemAdapter which will pass
+     * dynamic methods call onto Flysystem.
      */
     public function __call(string $method, array $parameters): mixed
     {
-        return $this->forwardCallTo($this->storage(), $method, $parameters);
+        return $this->forwardCallTo($this->getFilesystemAdapter(), $method, $parameters);
     }
 }
